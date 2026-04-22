@@ -1,0 +1,279 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+//
+// --- ENUMS ---
+//
+
+enum Gender {
+  MALE
+  FEMALE
+  OTHER
+}
+
+enum UserRole {
+  ADMIN
+  TEACHER
+  STUDENT
+}
+
+enum AttendanceStatus {
+  PRESENT
+  ABSENT
+  LATE
+  EXCUSED
+}
+
+enum FeeStatus {
+  PAID
+  PENDING
+  OVERDUE
+  PARTIAL
+}
+
+enum ClassRole {
+  INCHARGE
+  SUBJECT_TEACHER
+}
+
+//
+// --- MODELS ---
+//
+
+model User {
+  id        String   @id @default(uuid())
+  email     String   @unique
+  password  String
+  role      UserRole @default(STUDENT)
+  firstName String
+  lastName  String
+  phone     String?  @unique
+  isActive  Boolean  @default(true)
+
+  studentProfile Student?
+  teacherProfile Teacher?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([email])
+}
+
+//
+// --- STUDENT ---
+//
+
+model Student {
+  id               String   @id @default(uuid())
+  admissionNo      String   @unique
+  rollNo           String?
+  dateOfBirth      DateTime
+  address          String?
+  gender           Gender?
+  fatherName       String?
+  motherName       String?
+  emergencyContact String?
+
+  userId String @unique
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  enrollments Enrollment[]
+  attendance  Attendance[]
+  fees        FeeRecord[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+//
+// --- TEACHER ---
+//
+
+model Teacher {
+  id            String  @id @default(uuid())
+  employeeId    String  @unique
+  qualification String
+  gender        Gender?
+
+  userId String @unique
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  classRoles ClassStaff[]
+  subjects   SubjectTeacher[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+//
+// --- ACADEMIC YEAR ---
+//
+
+model AcademicYear {
+  id   String @id @default(uuid())
+  year String @unique // e.g. "2025-26"
+
+  classes SchoolClass[]
+}
+
+//
+// --- CLASS ---
+//
+
+model SchoolClass {
+  id             String @id @default(uuid())
+  name           String
+  section        String
+  academicYearId String
+
+  academicYear AcademicYear @relation(fields: [academicYearId], references: [id])
+
+  students Enrollment[]
+  subjects Subject[]
+  staff    ClassStaff[]
+
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+  attendances Attendance[]
+
+  @@unique([name, section, academicYearId])
+}
+
+//
+// --- ENROLLMENT (Student-Class History) ---
+//
+
+model Enrollment {
+  id        String    @id @default(uuid())
+  studentId String
+  classId   String
+  startDate DateTime
+  endDate   DateTime?
+
+  student Student     @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  class   SchoolClass @relation(fields: [classId], references: [id])
+
+  @@index([studentId])
+  @@index([classId])
+}
+
+//
+// --- SUBJECT ---
+//
+
+model Subject {
+  id   String @id @default(uuid())
+  name String
+  code String @unique
+
+  classId String
+  class   SchoolClass @relation(fields: [classId], references: [id])
+
+  teachers SubjectTeacher[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([classId])
+}
+
+//
+// --- SUBJECT-TEACHER (Many-to-Many) ---
+//
+
+model SubjectTeacher {
+  id        String @id @default(uuid())
+  subjectId String
+  teacherId String
+
+  subject Subject @relation(fields: [subjectId], references: [id])
+  teacher Teacher @relation(fields: [teacherId], references: [id])
+
+  @@unique([subjectId, teacherId])
+}
+
+//
+// --- CLASS STAFF (RBAC CORE) ---
+//
+
+model ClassStaff {
+  id        String    @id @default(uuid())
+  classId   String
+  teacherId String
+  role      ClassRole
+
+  class   SchoolClass @relation(fields: [classId], references: [id])
+  teacher Teacher     @relation(fields: [teacherId], references: [id])
+
+  @@unique([classId, teacherId, role])
+  @@index([classId])
+  @@index([teacherId])
+}
+
+//
+// --- ATTENDANCE ---
+//
+
+model Attendance {
+  id      String           @id @default(uuid())
+  date    DateTime         @db.Date
+  status  AttendanceStatus @default(PRESENT)
+  remarks String?
+
+  studentId String
+  student   Student @relation(fields: [studentId], references: [id], onDelete: Cascade)
+
+  classId String
+  class   SchoolClass @relation(fields: [classId], references: [id])
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([studentId, date])
+  @@index([studentId])
+  @@index([classId])
+}
+
+//
+// --- FEES ---
+//
+
+model FeeRecord {
+  id      String    @id @default(uuid())
+  amount  Decimal   @db.Decimal(10, 2)
+  dueDate DateTime
+  status  FeeStatus @default(PENDING)
+  title   String
+
+  studentId String
+  student   Student @relation(fields: [studentId], references: [id], onDelete: Cascade)
+
+  payments Payment[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([studentId])
+}
+
+//
+// --- PAYMENTS (IMPORTANT FOR REAL SYSTEM) ---
+//
+
+model Payment {
+  id     String   @id @default(uuid())
+  amount Decimal  @db.Decimal(10, 2)
+  paidAt DateTime @default(now())
+
+  feeId String
+  fee   FeeRecord @relation(fields: [feeId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+
+  @@index([feeId])
+}

@@ -1,0 +1,19 @@
+import { IsNotEmpty, IsString } from 'class-validator';
+
+export class CreateSubjectDto {
+  @IsString()
+  @IsNotEmpty()
+  name: string;
+
+  @IsString()
+  @IsNotEmpty()
+  code: string;
+
+  @IsString()
+  @IsNotEmpty()
+  classId: string;
+
+  @IsString()
+  @IsNotEmpty()
+  teacherId: string;
+}
