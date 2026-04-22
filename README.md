@@ -1,98 +1,218 @@
+# ERP NestJS - Educational Management System
+
 <p align="center">
   <a href="http://nestjs.com/" target="blank"><img src="https://nestjs.com/img/logo-small.svg" width="120" alt="Nest Logo" /></a>
 </p>
 
-[circleci-image]: https://img.shields.io/circleci/build/github/nestjs/nest/master?token=abc123def456
-[circleci-url]: https://circleci.com/gh/nestjs/nest
-
-  <p align="center">A progressive <a href="http://nodejs.org" target="_blank">Node.js</a> framework for building efficient and scalable server-side applications.</p>
-    <p align="center">
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/v/@nestjs/core.svg" alt="NPM Version" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/l/@nestjs/core.svg" alt="Package License" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/dm/@nestjs/common.svg" alt="NPM Downloads" /></a>
-<a href="https://circleci.com/gh/nestjs/nest" target="_blank"><img src="https://img.shields.io/circleci/build/github/nestjs/nest/master" alt="CircleCI" /></a>
-<a href="https://discord.gg/G7Qnnhy" target="_blank"><img src="https://img.shields.io/badge/discord-online-brightgreen.svg" alt="Discord"/></a>
-<a href="https://opencollective.com/nest#backer" target="_blank"><img src="https://opencollective.com/nest/backers/badge.svg" alt="Backers on Open Collective" /></a>
-<a href="https://opencollective.com/nest#sponsor" target="_blank"><img src="https://opencollective.com/nest/sponsors/badge.svg" alt="Sponsors on Open Collective" /></a>
-  <a href="https://paypal.me/kamilmysliwiec" target="_blank"><img src="https://img.shields.io/badge/Donate-PayPal-ff3f59.svg" alt="Donate us"/></a>
-    <a href="https://opencollective.com/nest#sponsor"  target="_blank"><img src="https://img.shields.io/badge/Support%20us-Open%20Collective-41B883.svg" alt="Support us"></a>
-  <a href="https://twitter.com/nestframework" target="_blank"><img src="https://img.shields.io/twitter/follow/nestframework.svg?style=social&label=Follow" alt="Follow us on Twitter"></a>
+<p align="center">
+  A comprehensive Enterprise Resource Planning (ERP) system for educational institutions built with NestJS.
 </p>
-  <!--[![Backers on Open Collective](https://opencollective.com/nest/backers/badge.svg)](https://opencollective.com/nest#backer)
-  [![Sponsors on Open Collective](https://opencollective.com/nest/sponsors/badge.svg)](https://opencollective.com/nest#sponsor)-->
+
+<p align="center">
+  <a href="https://www.npmjs.com/package/erp-nesjs" target="_blank"><img src="https://img.shields.io/npm/v/erp-nesjs.svg" alt="NPM Version" /></a>
+  <a href="https://www.npmjs.com/package/erp-nesjs" target="_blank"><img src="https://img.shields.io/npm/l/erp-nesjs.svg" alt="Package License" /></a>
+  <a href="https://www.npmjs.com/package/erp-nesjs" target="_blank"><img src="https://img.shields.io/npm/dm/erp-nesjs.svg" alt="NPM Downloads" /></a>
+  <a href="https://github.com/your-username/erp-nesjs/actions" target="_blank"><img src="https://github.com/your-username/erp-nesjs/workflows/CI/badge.svg" alt="CI" /></a>
+  <a href="https://discord.gg/G7Qnnhy" target="_blank"><img src="https://img.shields.io/badge/discord-online-brightgreen.svg" alt="Discord"/></a>
+</p>
 
 ## Description
 
-[Nest](https://github.com/nestjs/nest) framework TypeScript starter repository.
+**ERP NestJS** is a full-featured Enterprise Resource Planning (ERP) application designed specifically for educational institutions. It provides a robust backend API built with NestJS that manages students, teachers, classes, attendance, fees, and academic subjects. The system is engineered to streamline administrative and academic operations for schools, colleges, and other educational institutions, offering role-based access control and comprehensive data management capabilities.
 
-## Project setup
+## Features
 
+- **User Management**: Secure role-based access control (Admin, Teacher, Student)
+- **Student Management**: Complete student profiles with admission tracking and enrollment management
+- **Teacher Management**: Teacher information, qualifications, and subject assignments
+- **Class Management**: Educational class organization and structure management
+- **Subject Management**: Subject assignment to classes and teachers
+- **Attendance Tracking**: Daily attendance management with multiple status options
+- **Fee Management**: Student fee records with payment tracking and financial reporting
+- **Authentication**: JWT-based secure authentication system
+- **Authorization**: Role-based access guards and custom decorators
+- **API Documentation**: Integrated Swagger/OpenAPI documentation
+- **Database Management**: Prisma ORM with PostgreSQL support
+- **Data Validation**: Comprehensive input validation using class-validator
+- **Response Formatting**: Consistent API response structure with custom interceptors
+
+## Technology Stack
+
+### Backend Framework
+- **Runtime**: Node.js
+- **Framework**: NestJS 11.0.1
+- **Language**: TypeScript 5.7.3
+
+### Database & ORM
+- **Database**: PostgreSQL
+- **ORM**: Prisma 7.7.0
+- **Database Adapter**: @prisma/adapter-pg
+
+### Authentication & Security
+- **JWT**: @nestjs/jwt 11.0.2
+- **Passport**: passport 0.7.0 + passport-jwt 4.0.1
+- **Password Hashing**: bcrypt 6.0.0
+
+### Data Validation & Transformation
+- **Class Validator**: class-validator 0.14.0
+- **Class Transformer**: class-transformer 0.5.1
+
+### Documentation & Testing
+- **API Documentation**: @nestjs/swagger 11.2.6
+- **Test Framework**: Jest 30.3.0
+- **E2E Testing**: Jest + Supertest 7.0.0
+- **Code Quality**: ESLint + Prettier
+
+### Configuration
+- **Environment Variables**: dotenv 17.3.1
+- **Config Management**: @nestjs/config 4.0.3
+
+## Prerequisites
+
+Before running this application, make sure you have the following installed:
+
+- Node.js (v18 or higher)
+- npm or yarn
+- PostgreSQL database
+- Git
+
+## Installation
+
+1. Clone the repository:
 ```bash
-$ npm install
+git clone https://github.com/your-username/erp-nesjs.git
+cd erp-nesjs
 ```
 
-## Compile and run the project
-
+2. Install dependencies:
 ```bash
-# development
-$ npm run start
-
-# watch mode
-$ npm run start:dev
-
-# production mode
-$ npm run start:prod
+npm install
 ```
 
-## Run tests
+3. Set up environment variables:
+Create a `.env` file in the root directory and configure the following variables:
+```env
+DATABASE_URL="postgresql://username:password@localhost:5432/erp_db"
+JWT_SECRET="your-jwt-secret-key"
+```
+
+4. Set up the database:
+```bash
+# Generate Prisma client
+npx prisma generate
+
+# Run database migrations
+npx prisma migrate deploy
+
+# (Optional) Seed the database with initial data
+npm run seed
+```
+
+## Running the Application
+
+### Development
+```bash
+# Start in development mode with hot reload
+npm run start:dev
+```
+
+### Production
+```bash
+# Build the application
+npm run build
+
+# Start the production server
+npm run start:prod
+```
+
+The application will be available at `http://localhost:3000`.
+
+## Testing
 
 ```bash
-# unit tests
-$ npm run test
+# Run unit tests
+npm run test
 
-# e2e tests
-$ npm run test:e2e
+# Run e2e tests
+npm run test:e2e
 
-# test coverage
-$ npm run test:cov
+# Run tests with coverage
+npm run test:cov
+
+# Run tests in watch mode
+npm run test:watch
+```
+
+## API Documentation
+
+Once the application is running, you can access the Swagger API documentation at:
+`http://localhost:3000/api`
+
+The documentation provides interactive endpoints for all available API routes, including request/response examples and authentication requirements.
+
+## Database
+
+This project uses Prisma as the ORM with PostgreSQL as the database. The database schema is defined in `prisma/schema.prisma`.
+
+### Database Commands
+
+```bash
+# View database in Prisma Studio
+npx prisma studio
+
+# Create a new migration
+npx prisma migrate dev --name your-migration-name
+
+# Reset database
+npx prisma migrate reset
+
+# Generate Prisma client
+npx prisma generate
 ```
 
 ## Deployment
 
-When you're ready to deploy your NestJS application to production, there are some key steps you can take to ensure it runs as efficiently as possible. Check out the [deployment documentation](https://docs.nestjs.com/deployment) for more information.
+For production deployment, ensure you have:
 
-If you are looking for a cloud-based platform to deploy your NestJS application, check out [Mau](https://mau.nestjs.com), our official platform for deploying NestJS applications on AWS. Mau makes deployment straightforward and fast, requiring just a few simple steps:
+1. Set up a PostgreSQL database
+2. Configured environment variables
+3. Built the application with `npm run build`
+4. Use a process manager like PM2 for production
+
+Refer to the [NestJS Deployment Documentation](https://docs.nestjs.com/deployment) for detailed deployment guides.
+
+## Contributing
+
+We welcome contributions! Please follow these steps:
+
+1. Fork the repository
+2. Create a feature branch (`git checkout -b feature/amazing-feature`)
+3. Commit your changes (`git commit -m 'Add some amazing feature'`)
+4. Push to the branch (`git push origin feature/amazing-feature`)
+5. Open a Pull Request
+
+Please ensure your code follows the project's coding standards and includes appropriate tests.
+
+## Code Quality
 
 ```bash
-$ npm install -g @nestjs/mau
-$ mau deploy
+# Lint the code
+npm run lint
+
+# Format code with Prettier
+npm run format
 ```
-
-With Mau, you can deploy your application in just a few clicks, allowing you to focus on building features rather than managing infrastructure.
-
-## Resources
-
-Check out a few resources that may come in handy when working with NestJS:
-
-- Visit the [NestJS Documentation](https://docs.nestjs.com) to learn more about the framework.
-- For questions and support, please visit our [Discord channel](https://discord.gg/G7Qnnhy).
-- To dive deeper and get more hands-on experience, check out our official video [courses](https://courses.nestjs.com/).
-- Deploy your application to AWS with the help of [NestJS Mau](https://mau.nestjs.com) in just a few clicks.
-- Visualize your application graph and interact with the NestJS application in real-time using [NestJS Devtools](https://devtools.nestjs.com).
-- Need help with your project (part-time to full-time)? Check out our official [enterprise support](https://enterprise.nestjs.com).
-- To stay in the loop and get updates, follow us on [X](https://x.com/nestframework) and [LinkedIn](https://linkedin.com/company/nestjs).
-- Looking for a job, or have a job to offer? Check out our official [Jobs board](https://jobs.nestjs.com).
-
-## Support
-
-Nest is an MIT-licensed open source project. It can grow thanks to the sponsors and support by the amazing backers. If you'd like to join them, please [read more here](https://docs.nestjs.com/support).
-
-## Stay in touch
-
-- Author - [Kamil Myśliwiec](https://twitter.com/kammysliwiec)
-- Website - [https://nestjs.com](https://nestjs.com/)
-- Twitter - [@nestframework](https://twitter.com/nestframework)
 
 ## License
 
-Nest is [MIT licensed](https://github.com/nestjs/nest/blob/master/LICENSE).
+This project is proprietary and not licensed for public use.
+
+## Support
+
+For support, please contact the development team or create an issue in the repository.
+
+## Stay in Touch
+
+- Project Repository: [GitHub](https://github.com/your-username/erp-nesjs)
+- NestJS Framework: [https://nestjs.com](https://nestjs.com)
+- NestJS Documentation: [https://docs.nestjs.com](https://docs.nestjs.com)
