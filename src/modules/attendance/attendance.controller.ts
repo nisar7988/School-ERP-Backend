@@ -22,6 +22,11 @@ export class AttendanceController {
   async getAttendanceById(@Param('id') id: string) {
     return this.attendanceService.getAttendanceById(id);
   }
+  @Get('student/:studentId')
+  @Roles(Role.ADMIN, Role.TEACHER, Role.STUDENT)
+  async getAttendanceByStudentId(@Param('studentId') studentId: string) {
+    return this.attendanceService.getAttendanceByStudentId(studentId);
+  }
 
   @Post()
   @Roles(Role.ADMIN, Role.TEACHER)

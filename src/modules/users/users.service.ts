@@ -70,4 +70,21 @@ export class UsersService {
   async getAllUsers(): Promise<any[]> {
     return await this.prisma.user.findMany();
   }
+
+  async getUserDetails(id: string): Promise<any> {
+    console.log('Fetching user details for ID:', id); // Debugging line
+    const user = await this.prisma.user.findUnique({
+      where: { id },
+      include: {
+        studentProfile: true,
+        teacherProfile: true,
+      },
+    })
+
+    if (!user) {
+      throw new NotFoundException('User not found');
+    }
+
+    return user;
+  }
 }

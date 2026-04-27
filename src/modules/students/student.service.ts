@@ -124,6 +124,7 @@ async addStudent(dto: CreateStudentDto) {
   }
 
   async getStudentById(id: string) {
+
     const student = await this.prisma.student.findUnique({
       where: { id },
       include: {

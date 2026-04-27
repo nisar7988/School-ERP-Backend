@@ -1,4 +1,4 @@
-import { Body, Controller, Get, Post } from '@nestjs/common';
+import { Body, Controller, Get, Post, Req } from '@nestjs/common';
 import { UsersService } from './users.service';
 import { CreateUserDto } from './dto/create-user.dto';
 import { Roles } from '../../common/decorators/roles.decorator';
@@ -21,4 +21,14 @@ export class UsersController {
     async findAll() {
         return this.usersService.getAllUsers();
     }
+
+    @Get('/me')
+    @Roles(Role.ADMIN, Role.TEACHER, Role.STUDENT)
+    async getMyProfile(@Req() req) {
+        const user = req.user;
+        return this.usersService.getUserDetails(user.userId);
+    }
+
+
+    
 }

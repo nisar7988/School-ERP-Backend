@@ -20,8 +20,6 @@ export class ClassController {
     return this.classService.findAll(query);
   }
 
- 
-
   @Get(':id')
   @Roles(Role.ADMIN, Role.TEACHER)
   findOne(@Param('id') id: string) {

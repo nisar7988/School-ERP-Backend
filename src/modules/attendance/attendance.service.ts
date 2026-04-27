@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../../prisma/prisma.service';
 import { UpdateAttendanceDto } from './dto/update-attendance.dto';
 import { CreateAttendanceDto } from './dto/create-attendance.dto';
@@ -65,5 +65,20 @@ export class AttendanceService {
     return this.prisma.attendance.findUnique({
       where: { id },
     });
+  }
+
+  async getAttendanceByStudentId(studentId: string) {
+    const student = await this.prisma.student.findUnique({
+      where: { userId: studentId },
+    });
+
+    if (!student) {
+      throw new NotFoundException('Student not found');
+    }
+    const data = await this.prisma.attendance.findMany({
+      where: { studentId: student.id },
+      include: { class: true },
+    });
+    return createPaginatedResponse(data, data.length, 1, data.length);
   }
 }
