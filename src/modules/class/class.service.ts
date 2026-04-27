@@ -163,7 +163,7 @@ async update(id: string, data: UpdateClassDto) {
   }
 
   async getClassesForTeacher(userId: string) {
-    console.log('Fetching classes for teacher with userId:', userId); // Debugging line
+
   const data = await this.prisma.schoolClass.findMany({
       where: {
         staff: {
@@ -178,7 +178,6 @@ async update(id: string, data: UpdateClassDto) {
         academicYear: true,
       },
     });
-    console.log('Classes for teacher:', data); // Debugging line
-    return data;
+    return createPaginatedResponse(data, data.length, 1, data.length);
   }
 }

@@ -80,7 +80,7 @@ updateTeacher(id: string, updateData: Partial<CreateTeacherDto>) {
     data: {
       ...(employeeId && { employeeId }),
       ...(qualification && { qualification }),
-      ...(gender && { gender }), // ✅ FIXED (moved here)
+      ...(gender && { gender }), 
 
       user: {
         update: {
