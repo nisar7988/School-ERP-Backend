@@ -26,7 +26,7 @@ export class TeacherController {
   @Roles( Role.TEACHER)
   getClassesForTeacher(@Req() req) {
       console.log("Request user:", req.user); // Debugging line
-    return this.classService.getClassesForTeacher(req.userId);
+    return this.classService.getClassesForTeacher(req.user.userId);
   }
 
   @Get(':id')

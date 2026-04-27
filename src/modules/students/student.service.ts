@@ -76,9 +76,8 @@ async addStudent(dto: CreateStudentDto) {
       },
     };
   } catch (error: any) {
-    if (error.code === 'P2002') {
-      throw new ConflictException('Email or Admission No already exists');
-    }
+    console.error('Error creating student:', error); // Debugging line
+    
     throw error;
   }
 }
@@ -110,6 +109,7 @@ async addStudent(dto: CreateStudentDto) {
           enrollments: {
             include: {
               class: true,
+              
             },
           },
         },

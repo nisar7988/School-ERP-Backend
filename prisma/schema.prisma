@@ -52,7 +52,7 @@ model User {
   role      UserRole @default(STUDENT)
   firstName String
   lastName  String
-  phone     String?  @unique
+  phone     String?  
   isActive  Boolean  @default(true)
 
   studentProfile Student?

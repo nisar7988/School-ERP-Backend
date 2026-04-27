@@ -9,42 +9,33 @@ import { buildPagination } from '../../common/utils/pagination.util';
 export class AttendanceService {
   constructor(private readonly prisma: PrismaService) {}
 
- async findAll(query: AttendanceQueryDto) {
-  const {
-    status,
-    page = 1,
-    limit = 10,
-    sortBy = 'createdAt',
-    order = 'desc',
-  } = query;
+  async findAll(query: AttendanceQueryDto) {
+    const { status, page = 1, limit = 10, sortBy = 'createdAt', order = 'desc' } = query;
 
-  const pagination = buildPagination(page, limit);
+    const pagination = buildPagination(page, limit);
 
-  const where: any = {};
+    const where: any = {};
 
-  if (status) {
-    where.status = status;
+    if (status) {
+      where.status = status;
+    }
+
+    const allowedSortFields = ['date', 'status', 'studentId', 'createdAt'];
+
+    const safeSortBy = allowedSortFields.includes(sortBy) ? sortBy : 'createdAt';
+    const data = await this.prisma.attendance.findMany({
+      where,
+      ...pagination,
+      include: { student: { include: { user: true } }, class: true },
+      orderBy: {
+        [safeSortBy]: order,
+      },
+    });
+
+    const total = await this.prisma.attendance.count({ where });
+
+    return createPaginatedResponse(data, total, page, limit);
   }
-
-  const allowedSortFields = ['date', 'status', 'studentId', 'createdAt'];
-
-  const safeSortBy = allowedSortFields.includes(sortBy)
-    ? sortBy
-    : 'createdAt';
-
-  const data = await this.prisma.attendance.findMany({
-    where,
-    ...pagination,
-  include: { student: true },
-    orderBy: {
-      [safeSortBy]: order,
-    },
-  });
-
-  const total = await this.prisma.attendance.count({ where });
-
-  return createPaginatedResponse(data, total, page, limit);
-}
 
   async create(createAttendanceDto: CreateAttendanceDto) {
     const { studentId, classId, date, status } = createAttendanceDto;

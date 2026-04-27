@@ -61,7 +61,7 @@ export class ClassService {
     const { name, section, academicYearId } = data;
 
     let finalAcademicYearId = academicYearId;
-
+    console.log('Received academicYearId:', academicYearId); // Debugging line
     // ✅ Case 1: If NOT provided → use current year
     if (!finalAcademicYearId) {
       const currentYear = await this.academicYearService.getOrCreateCurrentYear();
@@ -163,6 +163,7 @@ async update(id: string, data: UpdateClassDto) {
   }
 
   async getClassesForTeacher(userId: string) {
+    console.log('Fetching classes for teacher with userId:', userId); // Debugging line
   const data = await this.prisma.schoolClass.findMany({
       where: {
         staff: {
