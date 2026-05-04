@@ -46,15 +46,15 @@ enum ClassRole {
 //
 
 model User {
-  id        String   @id @default(uuid())
-  email     String   @unique
-  password  String
-  role      UserRole @default(STUDENT)
-  firstName String
-  lastName  String
-  phone     String?  
-  isActive  Boolean  @default(true)
-
+  id             String   @id @default(uuid())
+  email          String   @unique
+  password       String
+  role           UserRole @default(STUDENT)
+  firstName      String
+  lastName       String
+  phone          String?
+  isActive       Boolean  @default(true)
+  profileImage   String?
   studentProfile Student?
   teacherProfile Teacher?
 

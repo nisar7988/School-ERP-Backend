@@ -43,4 +43,7 @@ export class CreateUserDto {
   @IsEnum(UserRole)
  @ApiProperty({ enum: ['Student', 'User']})
   role?: UserRole; // default = STUDENT from schema
+  @IsOptional()
+  @ApiProperty({ type: 'string', format: 'binary', required: false })
+  profileImage?: any;
 }

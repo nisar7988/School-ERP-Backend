@@ -67,7 +67,9 @@ export class AttendanceService {
     });
   }
 
-  async getAttendanceByStudentId(studentId: string) {
+  async getAttendanceByStudentId(studentId: string, query: AttendanceQueryDto) {
+    const { month, status } = query;
+
     const student = await this.prisma.student.findUnique({
       where: { userId: studentId },
     });
@@ -75,10 +77,52 @@ export class AttendanceService {
     if (!student) {
       throw new NotFoundException('Student not found');
     }
+
+    let dateFilter = {};
+    if (month) {
+      const [year, mon] = month.split('-').map(Number);
+      const startDate = new Date(year, mon - 1, 1);
+      const endDate = new Date(year, mon, 1);
+
+      dateFilter = {
+        date: {
+          gte: startDate,
+          lt: endDate,
+        },
+      };
+    }
+
     const data = await this.prisma.attendance.findMany({
-      where: { studentId: student.id },
+      where: {
+        studentId: student.id,
+        ...dateFilter,
+        ...(status && { status }),
+      },
       include: { class: true },
     });
-    return createPaginatedResponse(data, data.length, 1, data.length);
+
+    let present = 0;
+    let absent = 0;
+
+    for (const a of data) {
+      if (a.status === 'PRESENT') present++;
+      if (a.status === 'ABSENT') absent++;
+    }
+
+    const total = data.length;
+    const percentage = total ? (present / total) * 100 : 0;
+
+    const stats = {
+      percentage,
+      total,
+      present,
+      absent,
+    };
+
+    return {
+      data,
+      stats,
+      pagination: createPaginatedResponse(data, total, 1, total),
+    };
   }
 }

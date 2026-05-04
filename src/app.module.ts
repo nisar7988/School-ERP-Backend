@@ -20,6 +20,7 @@ import { SubjectModule } from './modules/subjects/subject.module';
 import { RolesGuard } from './common/guards/roles.guard';
 import { APP_GUARD } from '@nestjs/core';
 import { JwtAuthGuard } from './modules/auth/guards/jwt-auth.guard';
+import { ClaudinaryModule } from './modules/claudinary/claudinary.module';
 
 @Module({
   imports: [
@@ -38,6 +39,7 @@ import { JwtAuthGuard } from './modules/auth/guards/jwt-auth.guard';
     AttendanceModule,
     FeesModule,
     SubjectModule,
+    ClaudinaryModule,
   ],
   controllers: [AppController],
  providers: [

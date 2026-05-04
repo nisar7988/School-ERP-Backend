@@ -12,7 +12,14 @@ const pool = new Pool({
 
 const adapter = new PrismaPg(pool as any);
 
-const prisma = new PrismaClient({ adapter }); 
+const prisma = new PrismaClient({ adapter ,
+   omit: {
+    user: {
+      password: true,
+    },
+  }
+}
+); 
 async function main() {
   const hashedPassword = await bcrypt.hash('Admin@123', 10);
 

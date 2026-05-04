@@ -10,95 +10,96 @@ import * as bcrypt from 'bcrypt';
 export class StudentService {
   constructor(private readonly prisma: PrismaService) {}
 
-async addStudent(dto: CreateStudentDto) {
-  const {
-    firstName,
-    lastName,
-    email,
-    phone,
-    dateOfBirth,
-    gender,
-    password,
-    classId, // ✅ important
-    ...rest
-  } = dto;
+  async addStudent(dto: CreateStudentDto) {
+    const {
+      firstName,
+      lastName,
+      email,
+      phone,
+      dateOfBirth,
+      gender,
+      password,
+      classId, // ✅ important
+      ...rest
+    } = dto;
 
-  const rawPassword = password;
-  const hashedPassword = await bcrypt.hash(password, 10);
+    const rawPassword = password;
+    const hashedPassword = await bcrypt.hash(password, 10);
 
-  try {
-    const student = await this.prisma.student.create({
-      data: {
-        admissionNo: rest.admissionNo,
-        rollNo: rest.rollNo,
-        dateOfBirth: new Date(dateOfBirth),
-        gender,
-        address: rest.address,
-        fatherName: rest.fatherName,
-        motherName: rest.motherName,
-        emergencyContact: rest.emergencyContact,
+    try {
+      const student = await this.prisma.student.create({
+        data: {
+          admissionNo: rest.admissionNo,
+          rollNo: rest.rollNo,
+          dateOfBirth: new Date(dateOfBirth),
+          gender,
+          address: rest.address,
+          fatherName: rest.fatherName,
+          motherName: rest.motherName,
+          emergencyContact: rest.emergencyContact,
 
-        user: {
-          create: {
-            firstName,
-            lastName,
-            email,
-            phone,
-            password: hashedPassword,
-            role: 'STUDENT',
+          user: {
+            create: {
+              firstName,
+              lastName,
+              email,
+              phone,
+              password: hashedPassword,
+              role: 'STUDENT',
+            },
+          },
+
+          // 🔥 AUTO ENROLLMENT
+          enrollments: {
+            create: {
+              classId,
+              startDate: new Date(),
+            },
           },
         },
 
-        // 🔥 AUTO ENROLLMENT
-        enrollments: {
-          create: {
-            classId,
-            startDate: new Date(),
+        include: {
+          user: true,
+          enrollments: {
+            include: {
+              class: true,
+            },
           },
         },
-      },
+      });
 
-      include: {
-        user: true,
-        enrollments: {
-          include: {
-            class: true,
-          },
+      return {
+        student,
+        credentials: {
+          email,
+          password: rawPassword, // ⚠️ only for initial share
         },
-      },
-    });
+      };
+    } catch (error: any) {
+      console.error('Error creating student:', error); // Debugging line
 
-    return {
-      student,
-      credentials: {
-        email,
-        password: rawPassword, // ⚠️ only for initial share
-      },
-    };
-  } catch (error: any) {
-    console.error('Error creating student:', error); // Debugging line
-    
-    throw error;
+      throw error;
+    }
   }
-}
 
   // 🔑 Secure password generator
   private generatePassword(): string {
     return Math.random().toString(36).slice(-8); // improve if needed
   }
 
-
   async getAllStudents(query: BaseQueryDto) {
     const { classId, page = 1, limit = 10 } = query;
     const { skip, take } = buildPagination(query.page, query.limit);
-    
-    const where = classId ? {
-      enrollments: {
-        some: {
-          classId: classId,
-        },
-      },
-    } : {};
+
+    const where = classId
+      ? {
+          enrollments: {
+            some: {
+              classId: classId,
+            },
+          },
+        }
+      : {};
 
     const [students, total] = await this.prisma.$transaction([
       this.prisma.student.findMany({
@@ -109,7 +110,6 @@ async addStudent(dto: CreateStudentDto) {
           enrollments: {
             include: {
               class: true,
-              
             },
           },
         },
@@ -124,7 +124,6 @@ async addStudent(dto: CreateStudentDto) {
   }
 
   async getStudentById(id: string) {
-
     const student = await this.prisma.student.findUnique({
       where: { id },
       include: {
@@ -144,40 +143,40 @@ async addStudent(dto: CreateStudentDto) {
     return student;
   }
 
-async updateStudent(id: string, updateData: Partial<UpdateStudentDto>) {
-  const {
-    admissionNo,
-    rollNo,
-    dateOfBirth,
-    address,
-    gender,
-    fatherName,
-    motherName,
-    emergencyContact,
-  } = updateData;
+  async updateStudent(id: string, updateData: Partial<UpdateStudentDto>) {
+    const {
+      admissionNo,
+      rollNo,
+      dateOfBirth,
+      address,
+      gender,
+      fatherName,
+      motherName,
+      emergencyContact,
+    } = updateData;
 
-  return this.prisma.student.update({
-    where: { id },
-    data: {
-      ...(admissionNo && { admissionNo }),
-      ...(rollNo && { rollNo }),
-      ...(dateOfBirth && { dateOfBirth: new Date(dateOfBirth) }),
-      ...(address && { address }),
-      ...(gender && { gender }),
-      ...(fatherName && { fatherName }),
-      ...(motherName && { motherName }),
-      ...(emergencyContact && { emergencyContact }),
-    },
-    include: {
-      user: true,
-      enrollments: {
-        include: {
-          class: true,
+    return this.prisma.student.update({
+      where: { id },
+      data: {
+        ...(admissionNo && { admissionNo }),
+        ...(rollNo && { rollNo }),
+        ...(dateOfBirth && { dateOfBirth: new Date(dateOfBirth) }),
+        ...(address && { address }),
+        ...(gender && { gender }),
+        ...(fatherName && { fatherName }),
+        ...(motherName && { motherName }),
+        ...(emergencyContact && { emergencyContact }),
+      },
+      include: {
+        user: true,
+        enrollments: {
+          include: {
+            class: true,
+          },
         },
       },
-    },
-  });
-}
+    });
+  }
 
   async deleteStudent(id: string) {
     return this.prisma.student.delete({

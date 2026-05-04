@@ -1,6 +1,7 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../../prisma/prisma.service';
 import * as bcrypt from 'bcrypt';
+import { CreateUserDto } from './dto/create-user.dto';
 @Injectable()
 export class UsersService {
   constructor(private readonly prisma: PrismaService) {}
@@ -16,7 +17,7 @@ export class UsersService {
     return user;
   }
 
-  async createUser(userData: any): Promise<any> {
+  async createUser(userData: CreateUserDto): Promise<any> {
     const existingUser = await this.prisma.user.findUnique({
       where: { email: userData.email },
     });
@@ -31,6 +32,7 @@ export class UsersService {
       data: {
         ...userData,
         password: encryptedPassword,
+        profileImage: userData.profileImage,
       },
     });
   }
@@ -79,12 +81,19 @@ export class UsersService {
         studentProfile: true,
         teacherProfile: true,
       },
-    })
+    });
 
     if (!user) {
       throw new NotFoundException('User not found');
     }
 
     return user;
+  }
+
+  async updateProfileImage(userId: string, imagePath: string): Promise<any> {
+    return await this.prisma.user.update({
+      where: { id: userId },
+      data: { profileImage: imagePath },
+    });
   }
 }

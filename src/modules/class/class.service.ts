@@ -62,7 +62,6 @@ export class ClassService {
 
     let finalAcademicYearId = academicYearId;
     console.log('Received academicYearId:', academicYearId); // Debugging line
-    // ✅ Case 1: If NOT provided → use current year
     if (!finalAcademicYearId) {
       const currentYear = await this.academicYearService.getOrCreateCurrentYear();
 
@@ -72,7 +71,6 @@ export class ClassService {
 
       finalAcademicYearId = currentYear.id;
     }
-    // ✅ Case 2: If provided → validate it
     else {
       const academicYear = await this.prisma.academicYear.findUnique({
         where: { id: finalAcademicYearId },
@@ -88,7 +86,7 @@ export class ClassService {
         data: {
           name,
           section,
-          academicYearId: finalAcademicYearId, // 🔥 always correct now
+          academicYearId: finalAcademicYearId, 
           ...(data.staff && {
             staff: {
               create: data.staff.map((s) => ({
