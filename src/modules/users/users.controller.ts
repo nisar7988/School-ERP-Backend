@@ -54,7 +54,7 @@ export class UsersController {
   }
 
   @Patch('me/profile-image')
-  @Roles(Role.ADMIN, Role.TEACHER, Role.STUDENT)
+  @Roles(Role.ADMIN, Role.TEACHER)
   @ApiConsumes('multipart/form-data')
   @UseInterceptors(
     FileInterceptor('profileImage', {
