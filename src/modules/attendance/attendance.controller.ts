@@ -1,4 +1,4 @@
-import { Controller, Patch, Post, Body, Param ,Get, Query} from '@nestjs/common';
+import { Controller, Patch, Post, Body, Param, Get, Query } from '@nestjs/common';
 import { AttendanceService } from './attendance.service';
 import { UpdateAttendanceDto } from './dto/update-attendance.dto';
 import { CreateAttendanceDto } from './dto/create-attendance.dto';
@@ -24,8 +24,11 @@ export class AttendanceController {
   }
   @Get('student/:studentId')
   @Roles(Role.ADMIN, Role.TEACHER, Role.STUDENT)
-  async getAttendanceByStudentId(@Param('studentId') studentId: string, @Query() query: AttendanceQueryDto) {
-    return this.attendanceService.getAttendanceByStudentId(studentId  , query);
+  async getAttendanceByStudentId(
+    @Param('studentId') studentId: string,
+    @Query() query: AttendanceQueryDto,
+  ) {
+    return this.attendanceService.getAttendanceByStudentId(studentId, query);
   }
 
   @Post()
@@ -36,10 +39,7 @@ export class AttendanceController {
 
   @Patch(':id')
   @Roles(Role.ADMIN, Role.TEACHER)
-  async update(
-    @Param('id') id: string,
-    @Body() updateAttendanceDto: UpdateAttendanceDto
-  ) {
+  async update(@Param('id') id: string, @Body() updateAttendanceDto: UpdateAttendanceDto) {
     return this.attendanceService.update(id, updateAttendanceDto);
   }
 }

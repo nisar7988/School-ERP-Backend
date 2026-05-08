@@ -70,8 +70,7 @@ export class ClassService {
       }
 
       finalAcademicYearId = currentYear.id;
-    }
-    else {
+    } else {
       const academicYear = await this.prisma.academicYear.findUnique({
         where: { id: finalAcademicYearId },
       });
@@ -86,7 +85,7 @@ export class ClassService {
         data: {
           name,
           section,
-          academicYearId: finalAcademicYearId, 
+          academicYearId: finalAcademicYearId,
           ...(data.staff && {
             staff: {
               create: data.staff.map((s) => ({
@@ -112,40 +111,40 @@ export class ClassService {
       throw error;
     }
   }
-async update(id: string, data: UpdateClassDto) {
-  const schoolClass = await this.prisma.schoolClass.findUnique({
-    where: { id },
-  });
+  async update(id: string, data: UpdateClassDto) {
+    const schoolClass = await this.prisma.schoolClass.findUnique({
+      where: { id },
+    });
 
-  if (!schoolClass) {
-    throw new NotFoundException('Class not found');
-  }
+    if (!schoolClass) {
+      throw new NotFoundException('Class not found');
+    }
 
-  return await this.prisma.schoolClass.update({
-    where: { id },
-    data: {
-      ...(data.name && { name: data.name }),
-      ...(data.section && { section: data.section }),
+    return await this.prisma.schoolClass.update({
+      where: { id },
+      data: {
+        ...(data.name && { name: data.name }),
+        ...(data.section && { section: data.section }),
 
-      // 👇 THIS IS THE KEY PART
-      ...(data.staff && {
-        staff: {
-          deleteMany: {}, // remove old staff
-          create: data.staff.map((s) => ({
-            teacherId: s.teacherId,
-            role: s.role,
-          })),
-        },
-      }),
-    },
-    include: {
-      academicYear: true,
-      staff: {
-        include: { teacher: { include: { user: true } } },
+        // 👇 THIS IS THE KEY PART
+        ...(data.staff && {
+          staff: {
+            deleteMany: {}, // remove old staff
+            create: data.staff.map((s) => ({
+              teacherId: s.teacherId,
+              role: s.role,
+            })),
+          },
+        }),
       },
-    },
-  });
-}
+      include: {
+        academicYear: true,
+        staff: {
+          include: { teacher: { include: { user: true } } },
+        },
+      },
+    });
+  }
   async delete(id: string) {
     const schoolClass = await this.prisma.schoolClass.findUnique({
       where: { id },
@@ -161,8 +160,7 @@ async update(id: string, data: UpdateClassDto) {
   }
 
   async getClassesForTeacher(userId: string) {
-
-  const data = await this.prisma.schoolClass.findMany({
+    const data = await this.prisma.schoolClass.findMany({
       where: {
         staff: {
           some: {

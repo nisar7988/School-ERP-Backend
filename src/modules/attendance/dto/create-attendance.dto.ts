@@ -6,21 +6,27 @@ export class CreateAttendanceDto {
   @IsDateString()
   date!: string;
 
-@ApiProperty({
-  description: 'The status of the attendance record',
-  example: 'PRESENT',
-  enum: AttendanceStatus
-})
+  @ApiProperty({
+    description: 'The status of the attendance record',
+    example: 'PRESENT',
+    enum: AttendanceStatus,
+  })
   @IsOptional()
   @IsEnum(AttendanceStatus)
   status?: AttendanceStatus;
 
-  @ApiProperty({ description: 'Any additional remarks about the attendance record', example: 'Student was present for the entire class' })
+  @ApiProperty({
+    description: 'Any additional remarks about the attendance record',
+    example: 'Student was present for the entire class',
+  })
   @IsOptional()
   @IsString()
   remarks?: string;
 
-  @ApiProperty({ description: 'The ID of the student associated with the attendance record', example: 'student123' })
+  @ApiProperty({
+    description: 'The ID of the student associated with the attendance record',
+    example: 'student123',
+  })
   @IsString()
   @IsNotEmpty()
   studentId!: string;
