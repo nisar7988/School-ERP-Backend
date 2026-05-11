@@ -58,8 +58,9 @@ export class ClassService {
     return schoolClass;
   }
   async create(data: CreateClassDto) {
+    console.log('Creating class with data:', data); // Debugging line
     const { name, section, academicYearId } = data;
-
+    console.log('Creating class with data:', data); // Debugging line
     let finalAcademicYearId = academicYearId;
     console.log('Received academicYearId:', academicYearId); // Debugging line
     if (!finalAcademicYearId) {
@@ -116,6 +117,17 @@ export class ClassService {
       where: { id },
     });
 
+    const subjects = data.subjects;
+    if (subjects && subjects.length > 0) {
+      const existingSubjects = await this.prisma.subject.findMany({
+        where: { id: { in: subjects } },
+      });
+      const existingSubjectIds = existingSubjects.map((s) => s.id);
+      const invalidSubjectIds = subjects.filter((s) => !existingSubjectIds.includes(s));
+      if (invalidSubjectIds.length > 0) {
+        throw new NotFoundException(`Subjects not found: ${invalidSubjectIds.join(', ')}`);
+      }
+    }
     if (!schoolClass) {
       throw new NotFoundException('Class not found');
     }
@@ -126,7 +138,13 @@ export class ClassService {
         ...(data.name && { name: data.name }),
         ...(data.section && { section: data.section }),
 
-        // 👇 THIS IS THE KEY PART
+        ...(data.subjects &&
+          data.subjects.length > 0 && {
+            subjects: {
+              connect: data.subjects.map((subjectId) => ({ id: subjectId })),
+            },
+          }),
+
         ...(data.staff && {
           staff: {
             deleteMany: {}, // remove old staff
@@ -139,6 +157,7 @@ export class ClassService {
       },
       include: {
         academicYear: true,
+        subjects: true,
         staff: {
           include: { teacher: { include: { user: true } } },
         },

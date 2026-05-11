@@ -12,8 +12,4 @@ export class CreateSubjectDto {
   @IsString()
   @IsNotEmpty()
   classId: string;
-
-  @IsString()
-  @IsNotEmpty()
-  teacherId: string;
 }

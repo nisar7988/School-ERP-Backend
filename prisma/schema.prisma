@@ -106,8 +106,9 @@ model Teacher {
   classRoles ClassStaff[]
   subjects   SubjectTeacher[]
 
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  createdAt DateTime   @default(now())
+  updatedAt DateTime   @updatedAt
+  schedules Schedule[]
 }
 
 //
@@ -140,6 +141,7 @@ model SchoolClass {
   createdAt   DateTime     @default(now())
   updatedAt   DateTime     @updatedAt
   attendances Attendance[]
+  schedules   Schedule[]
 
   @@unique([name, section, academicYearId])
 }
@@ -176,8 +178,9 @@ model Subject {
 
   teachers SubjectTeacher[]
 
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  createdAt DateTime   @default(now())
+  updatedAt DateTime   @updatedAt
+  schedules Schedule[]
 
   @@index([classId])
 }
@@ -276,4 +279,25 @@ model Payment {
   createdAt DateTime @default(now())
 
   @@index([feeId])
+}
+
+//Schedule 
+model Schedule {
+  id        String   @id @default(uuid())
+  classId   String
+  subjectId String
+  teacherId String
+  startTime DateTime
+  endTime   DateTime
+  room      String?
+  dayOfWeek String?
+
+  class     SchoolClass @relation(fields: [classId], references: [id])
+  subject   Subject     @relation(fields: [subjectId], references: [id])
+  teacher   Teacher     @relation(fields: [teacherId], references: [id])
+  createdAt DateTime    @default(now())
+  updatedAt DateTime    @updatedAt
+
+  @@index([classId])
+  @@index([subjectId])
 }

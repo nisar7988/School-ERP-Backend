@@ -21,9 +21,7 @@ export class AcademicYearService {
       return academicYear;
     } catch (error: any) {
       if (error.code === 'P2002') {
-        throw new ConflictException(
-          `Academic year ${dto.year} already exists`,
-        );
+        throw new ConflictException(`Academic year ${dto.year} already exists`);
       }
       throw error;
     }
@@ -103,9 +101,7 @@ export class AcademicYearService {
       return updated;
     } catch (error: any) {
       if (error.code === 'P2002') {
-        throw new ConflictException(
-          `Academic year ${dto.year} already exists`,
-        );
+        throw new ConflictException(`Academic year ${dto.year} already exists`);
       }
       throw error;
     }
@@ -143,6 +139,7 @@ export class AcademicYearService {
   }
 
   async getOrCreateCurrentYear() {
+    console.log('Checking for current academic year'); // Debugging line
     const yearString = await this.getCurrentYear();
 
     const existing = await this.prisma.academicYear.findUnique({
@@ -152,7 +149,7 @@ export class AcademicYearService {
     if (existing) {
       return existing;
     }
-
+    console.log(`Creating new academic year: ${yearString}`);
     return this.prisma.academicYear.create({
       data: {
         year: yearString,

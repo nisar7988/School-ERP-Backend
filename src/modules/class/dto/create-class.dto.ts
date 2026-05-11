@@ -47,7 +47,6 @@ export class CreateClassDto {
     description: 'Academic year ID',
     example: 'uuid',
   })
-  @IsUUID()
   @IsOptional()
   academicYearId?: string;
 
