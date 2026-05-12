@@ -17,6 +17,11 @@ export class PaymentController {
   async createPayment(@Body() dto: CreatePaymentDto) {
     return this.paymentService.recordPayment(dto);
   }
+  @Get()
+  @Roles(Role.ADMIN)
+  async getAllPayments(@Query() query: BaseQueryDto) {
+    return this.paymentService.getAllPayments(query);
+  }
 
   @Get('student-fee/:studentFeeId')
   @Roles(Role.ADMIN, Role.TEACHER, Role.STUDENT)

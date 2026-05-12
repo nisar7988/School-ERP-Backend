@@ -44,6 +44,37 @@ export class EnrollmentService {
         },
       });
 
+      // Auto-generate StudentFee records for all existing FeeStructures in this class
+      const feeStructures = await this.prisma.feeStructure.findMany({
+        where: { classId },
+      });
+
+      for (const feeStructure of feeStructures) {
+        const existing = await this.prisma.studentFee.findFirst({
+          where: {
+            studentId,
+            feeStructureId: feeStructure.id,
+          },
+        });
+
+        if (!existing) {
+          const dueDate = new Date();
+          dueDate.setMonth(dueDate.getMonth() + 1);
+
+          await this.prisma.studentFee.create({
+            data: {
+              studentId,
+              feeStructureId: feeStructure.id,
+              amount: feeStructure.amount,
+              dueDate,
+              paidAmount: 0,
+              pendingAmount: feeStructure.amount,
+              status: 'PENDING',
+            },
+          });
+        }
+      }
+
       return enrollment;
     } catch (error: any) {
       if (error.code === 'P2002') {

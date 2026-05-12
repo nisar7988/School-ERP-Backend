@@ -11,6 +11,18 @@ import Decimal from 'decimal.js';
 export class PaymentService {
   constructor(private readonly prisma: PrismaService) {}
 
+  async getAllPayments(query: BaseQueryDto) {
+    const { page = 1, limit = 10 } = query;
+    const { skip, take } = buildPagination(page, limit);
+    const total = await this.prisma.payment.count();
+    const payments = await this.prisma.payment.findMany({
+      skip,
+      take,
+    });
+
+    return createPaginatedResponse(payments, total, page, limit);
+  }
+
   async recordPayment(dto: CreatePaymentDto) {
     const { studentFeeId, amount, paidAt, method, referenceNo } = dto;
 
@@ -169,47 +181,54 @@ export class PaymentService {
         fees: {
           include: { payments: true, feeStructure: true },
         },
+        enrollments: { include: { class: true } },
       },
     });
 
     if (!student) {
       throw new NotFoundException('Student not found');
     }
+    const classId: string | null =
+      student.enrollments.length > 0 ? student.enrollments[0].classId : null;
+    const feeStructures = await this.prisma.feeStructure.findMany({
+      where: { classId: classId && classId !== null ? classId : undefined },
+    });
 
+    const totalFees = feeStructures.reduce((sum, fs) => sum.plus(fs.amount), new Decimal(0));
+    // Calculate totals from actual StudentFee records (auto-generated from FeeStructures)
     const summary = {
       studentId,
       studentName: student.user?.firstName
         ? `${student.user.firstName} ${student.user.lastName}`
         : student.id,
-      totalFees: new Decimal(0),
-      totalPaid: new Decimal(0),
-      totalDue: new Decimal(0),
-      feesByStatus: {
-        PAID: 0,
-        PENDING: 0,
-        PARTIAL: 0,
-        OVERDUE: 0,
-      },
-      fees: student.fees.map((fee) => {
-        const totalPaid = fee.payments.reduce((sum, p) => sum + Number(p.amount), 0);
-        return {
-          id: fee.id,
-          title: fee.feeStructure?.title ?? null,
-          amount: Number(fee.amount),
-          dueDate: fee.dueDate,
-          status: fee.status,
-          totalPaid: new Decimal(totalPaid),
-          remaining: new Decimal(Number(fee.amount) - totalPaid),
-        };
-      }),
+      totalFees,
+      totalPaid: student.fees.reduce((sum, fee) => sum.plus(fee.paidAmount ?? 0), new Decimal(0)),
+      totalDue: student.fees.reduce((sum, fee) => sum.plus(fee.pendingAmount ?? 0), new Decimal(0)),
+      remainingAmount: totalFees.minus(
+        student.fees.reduce((sum, fee) => sum.plus(fee.paidAmount ?? 0), new Decimal(0)),
+      ),
+      feeDetails: student.fees.map((fee) => ({
+        feeId: fee.id,
+        classId: fee.feeStructure?.classId,
+        className: fee.feeStructure?.classId
+          ? student.enrollments.find(
+              (enrollment) => enrollment.classId === fee.feeStructure?.classId,
+            )?.class.name
+          : null,
+        amount: fee.amount,
+        paidAmount: fee.paidAmount,
+        pendingAmount: fee.pendingAmount,
+        status: fee.status,
+        dueDate: fee.dueDate,
+        payments: fee.payments.map((payment) => ({
+          paymentId: payment.id,
+          amount: payment.amount,
+          method: payment.method,
+          paidAt: payment.paidAt,
+          referenceNo: payment.referenceNo,
+        })),
+      })),
     };
-
-    summary.fees.forEach((fee) => {
-      summary.totalFees = summary.totalFees.plus(fee.amount);
-      summary.totalPaid = summary.totalPaid.plus(fee.totalPaid);
-      summary.totalDue = summary.totalDue.plus(fee.remaining);
-      summary.feesByStatus[fee.status]++;
-    });
 
     return summary;
   }

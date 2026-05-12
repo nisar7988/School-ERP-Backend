@@ -98,4 +98,24 @@ export class FeesController {
     return this.feesService.getStudentFeesByStudent(studentId);
   }
 
+  @Post('auto-generate/student/:studentId')
+  @Roles(Role.ADMIN)
+  async autoGenerateFeesForStudent(@Param('studentId') studentId: string) {
+    return this.feesService.autoGenerateFeesForStudent(studentId);
+  }
+
+  @Get('status/student/:studentId')
+  @Roles(Role.ADMIN, Role.TEACHER, Role.STUDENT)
+  async getStudentEnrollmentStatus(@Param('studentId') studentId: string) {
+    return this.feesService.getStudentEnrollmentStatus(studentId);
+  }
+
+  @Post('bulk-create/class/:classId')
+  @Roles(Role.ADMIN)
+  async createStudentFeesForClass(
+    @Param('classId') classId: string,
+    @Body() body: { dueDate: string },
+  ) {
+    return this.feesService.createStudentFeesForClassStudents(classId, body.dueDate);
+  }
 }
