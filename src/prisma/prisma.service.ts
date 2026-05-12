@@ -1,5 +1,5 @@
 import { Injectable, OnModuleInit } from '@nestjs/common';
-import { PrismaClient } from '@prisma/client'; 
+import { PrismaClient } from '@prisma/client';
 import { PrismaPg } from '@prisma/adapter-pg';
 import { Pool } from 'pg';
 
@@ -7,11 +7,18 @@ import { Pool } from 'pg';
 export class PrismaService extends PrismaClient implements OnModuleInit {
   constructor() {
     const pool = new Pool({ connectionString: process.env.DATABASE_URL });
-    
+
     // Cast 'pool' to any to resolve the @types/pg version mismatch
     const adapter = new PrismaPg(pool as any);
 
-    super({ adapter });
+    super({
+      adapter,
+      omit: {
+        user: {
+          password: true,
+        },
+      },
+    });
   }
 
   async onModuleInit() {

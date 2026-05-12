@@ -6,10 +6,18 @@ import { CreateUserDto } from './dto/create-user.dto';
 export class UsersService {
   constructor(private readonly prisma: PrismaService) {}
 
-  async findByEmail(email: string): Promise<any> {
+  async findByEmail(email: string) {
     const user = await this.prisma.user.findUnique({
       where: { email },
+      select: {
+        id: true,
+        email: true,
+        role: true,
+        password: true,
+      },
     });
+    console.log('User found by email:', user); // Debugging line
+
     if (!user) {
       throw new NotFoundException('User not found');
     }
