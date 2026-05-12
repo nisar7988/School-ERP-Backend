@@ -6,14 +6,11 @@ import { LoginDto } from './dto/login.dto';
 
 @Controller('auth')
 export class AuthController {
+  constructor(private readonly authService: AuthService) {}
 
-    constructor(private readonly authService: AuthService){}
-
-    
-@Public()
-@Post('login')
-async login(@Body() userData: LoginDto){
+  @Public()
+  @Post('login')
+  async login(@Body() userData: LoginDto) {
     return this.authService.signIn(userData);
-}
-
+  }
 }

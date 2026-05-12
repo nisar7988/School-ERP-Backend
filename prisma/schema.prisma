@@ -9,6 +9,12 @@ datasource db {
 //
 // --- ENUMS ---
 //
+enum PaymentMethod {
+  CASH
+  UPI
+  CARD
+  BANK_TRANSFER
+}
 
 enum Gender {
   MALE
@@ -76,7 +82,7 @@ model Student {
   address          String?
   gender           Gender?
   fatherName       String?
-  motherName       String?
+  motherName       String
   emergencyContact String?
 
   userId String @unique
@@ -84,7 +90,7 @@ model Student {
 
   enrollments Enrollment[]
   attendance  Attendance[]
-  fees        FeeRecord[]
+  fees        StudentFee[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -138,10 +144,11 @@ model SchoolClass {
   subjects Subject[]
   staff    ClassStaff[]
 
-  createdAt   DateTime     @default(now())
-  updatedAt   DateTime     @updatedAt
-  attendances Attendance[]
-  schedules   Schedule[]
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
+  attendances   Attendance[]
+  schedules     Schedule[]
+  feeStructures FeeStructure[]
 
   @@unique([name, section, academicYearId])
 }
@@ -245,23 +252,36 @@ model Attendance {
 //
 // --- FEES ---
 //
+model FeeStructure {
+  id        String  @id @default(uuid())
+  classId   String
+  title     String
+  amount    Decimal @db.Decimal(10, 2)
+  mandatory Boolean @default(true)
 
-model FeeRecord {
-  id      String    @id @default(uuid())
-  amount  Decimal   @db.Decimal(10, 2)
+  class SchoolClass @relation(fields: [classId], references: [id])
+
+  createdAt   DateTime     @default(now())
+  studentFees StudentFee[]
+}
+
+model StudentFee {
+  id             String @id @default(uuid())
+  studentId      String
+  feeStructureId String
+
+  amount  Decimal  @db.Decimal(10, 2)
   dueDate DateTime
-  status  FeeStatus @default(PENDING)
-  title   String
 
-  studentId String
-  student   Student @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  paidAmount    Decimal @default(0)
+  pendingAmount Decimal
+
+  status FeeStatus
+
+  student      Student      @relation(fields: [studentId], references: [id])
+  feeStructure FeeStructure @relation(fields: [feeStructureId], references: [id])
 
   payments Payment[]
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  @@index([studentId])
 }
 
 //
@@ -269,16 +289,17 @@ model FeeRecord {
 //
 
 model Payment {
-  id     String   @id @default(uuid())
-  amount Decimal  @db.Decimal(10, 2)
+  id String @id @default(uuid())
+
+  studentFeeId String
+  amount       Decimal @db.Decimal(10, 2)
+
+  method      PaymentMethod
+  referenceNo String?
+
   paidAt DateTime @default(now())
 
-  feeId String
-  fee   FeeRecord @relation(fields: [feeId], references: [id], onDelete: Cascade)
-
-  createdAt DateTime @default(now())
-
-  @@index([feeId])
+  studentFee StudentFee @relation(fields: [studentFeeId], references: [id])
 }
 
 //Schedule 

@@ -1,42 +1,101 @@
-import { Controller } from '@nestjs/common';
+import { Controller, Get, Post, Patch, Delete, Body, Param } from '@nestjs/common';
 import { FeesService } from './fees.service';
-import { Get, Post, Body, Patch, Param } from '@nestjs/common';
-import { CreateFeeRecordDto } from './dto/create-fee-record.dto';
-import { UpdateFeeRecordDto } from './dto/update-fee-record.dto';
+import { CreateFeeStructureDto } from './dto/create-fee-structure.dto';
+import { UpdateFeeStructureDto } from './dto/update-fee-structure.dto';
+import { CreateStudentFeeDto } from './dto/create-student-fee.dto';
+import { UpdateStudentFeeDto } from './dto/update-student-fee.dto';
 import { Roles } from '../../common/decorators/roles.decorator';
 import { Role } from '../../common/enums/roles.enum';
-import { ApiBearerAuth } from '@nestjs/swagger';
+import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 
+@ApiTags('fees')
 @ApiBearerAuth('access-token')
 @Controller('fees')
 export class FeesController {
-    constructor(private readonly feesService: FeesService) {}
+  constructor(private readonly feesService: FeesService) {}
 
-    @Get()
-    @Roles(Role.ADMIN, Role.STUDENT)
-    async getAllFees() {
-        return this.feesService.getAllFees();
-    }
+  @Post('structures')
+  @Roles(Role.ADMIN)
+  async createFeeForClass(@Body() createFeeStructureDto: CreateFeeStructureDto) {
+    return this.feesService.createFeeForClass(createFeeStructureDto);
+  }
 
-    @Get(':id')
-    @Roles(Role.ADMIN, Role.STUDENT)
-    async getFeeById(@Param('id') id: string) {
-        return this.feesService.getFeeById(id);
-    }
+  @Patch('structures/:id')
+  @Roles(Role.ADMIN)
+  async updateFeeForClass(
+    @Param('id') id: string,
+    @Body() updateFeeStructureDto: UpdateFeeStructureDto,
+  ) {
+    return this.feesService.updateFeeForClass(id, updateFeeStructureDto);
+  }
 
-    @Post()
-    @Roles(Role.ADMIN)
-    async create(@Body() createFeeDto: CreateFeeRecordDto) {
-        return this.feesService.create(createFeeDto);
-    }
+  @Delete('structures/:id')
+  @Roles(Role.ADMIN)
+  async deleteFeeStructureForClass(@Param('id') id: string) {
+    return this.feesService.deleteFeeStructureForClass(id);
+  }
 
-    @Patch(':id')
-    @Roles(Role.ADMIN)
-    async update(
-        @Param('id') id: string,
-        @Body() updateFeeDto: UpdateFeeRecordDto
-        
-    ) {
-        return this.feesService.update(id, updateFeeDto);
-    }
+  @Get('structures')
+  @Roles(Role.ADMIN, Role.TEACHER)
+  async getAllFeeStructures() {
+    return this.feesService.getAllFeeStructures();
+  }
+
+  @Get('structures/class/:classId')
+  @Roles(Role.ADMIN, Role.TEACHER)
+  async getFeeStructureForClass(@Param('classId') classId: string) {
+    return this.feesService.getFeeStructureForClass(classId);
+  }
+
+  @Get('pending/class/:classId')
+  @Roles(Role.ADMIN, Role.TEACHER)
+  async getPendingFeesForClass(@Param('classId') classId: string) {
+    return this.feesService.getPendingFeesForClass(classId);
+  }
+
+  @Get('student/:studentId')
+  @Roles(Role.ADMIN, Role.TEACHER, Role.STUDENT)
+  async getStudentFeeDetails(@Param('studentId') studentId: string) {
+    return this.feesService.getStudentFeeDetails(studentId);
+  }
+
+  @Post('student-fees')
+  @Roles(Role.ADMIN)
+  async createStudentFee(@Body() createStudentFeeDto: CreateStudentFeeDto) {
+    return this.feesService.createStudentFee(createStudentFeeDto);
+  }
+
+  @Patch('student-fees/:id')
+  @Roles(Role.ADMIN)
+  async updateStudentFee(
+    @Param('id') id: string,
+    @Body() updateStudentFeeDto: UpdateStudentFeeDto,
+  ) {
+    return this.feesService.updateStudentFee(id, updateStudentFeeDto);
+  }
+
+  @Delete('student-fees/:id')
+  @Roles(Role.ADMIN)
+  async deleteStudentFee(@Param('id') id: string) {
+    return this.feesService.deleteStudentFee(id);
+  }
+
+  @Get('student-fees')
+  @Roles(Role.ADMIN, Role.TEACHER)
+  async getAllStudentFees() {
+    return this.feesService.getAllStudentFees();
+  }
+
+  @Get('student-fees/:id')
+  @Roles(Role.ADMIN, Role.TEACHER, Role.STUDENT)
+  async getStudentFeeById(@Param('id') id: string) {
+    return this.feesService.getStudentFeeById(id);
+  }
+
+  @Get('student-fees/student/:studentId')
+  @Roles(Role.ADMIN, Role.TEACHER, Role.STUDENT)
+  async getStudentFeesByStudent(@Param('studentId') studentId: string) {
+    return this.feesService.getStudentFeesByStudent(studentId);
+  }
+
 }

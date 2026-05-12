@@ -1,16 +1,8 @@
-import {
-  Controller,
-  Post,
-  Patch,
-  Get,
-  Delete,
-  Body,
-  Param,
-} from '@nestjs/common';
+import { Controller, Post, Patch, Get, Delete, Body, Param } from '@nestjs/common';
 import { StudentService } from './student.service';
 import { CreateStudentDto } from './dto/create-student.dto';
 import { UpdateStudentDto } from './dto/update-student.dto';
-import { Query } from '@nestjs/common/decorators'
+import { Query } from '@nestjs/common/decorators';
 import { BaseQueryDto } from '../../common/dto/query.dto';
 import { Roles } from '../../common/decorators/roles.decorator';
 import { Role } from '../../common/enums/roles.enum';
@@ -42,10 +34,7 @@ export class StudentController {
 
   @Patch(':id')
   @Roles(Role.ADMIN, Role.TEACHER)
-  async updateStudent(
-    @Param('id') id: string,
-    @Body() updateData: UpdateStudentDto,
-  ) {
+  async updateStudent(@Param('id') id: string, @Body() updateData: UpdateStudentDto) {
     return this.studentService.updateStudent(id, updateData);
   }
 

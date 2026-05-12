@@ -1,12 +1,4 @@
-import {
-  Controller,
-  Post,
-  Get,
-  Delete,
-  Body,
-  Param,
-  Query,
-} from '@nestjs/common';
+import { Controller, Post, Get, Delete, Body, Param, Query } from '@nestjs/common';
 import { ApiTags, ApiBearerAuth } from '@nestjs/swagger';
 import { PaymentService } from './payment.service';
 import { CreatePaymentDto } from './dto/create-payment.dto';
@@ -21,26 +13,23 @@ export class PaymentController {
   constructor(private readonly paymentService: PaymentService) {}
 
   @Post()
-  @Roles(Role.ADMIN, Role.TEACHER)
-  async recordPayment(@Body() dto: CreatePaymentDto) {
+  @Roles(Role.ADMIN, Role.TEACHER, Role.STUDENT)
+  async createPayment(@Body() dto: CreatePaymentDto) {
     return this.paymentService.recordPayment(dto);
   }
 
-  @Get('fee/:feeId')
+  @Get('student-fee/:studentFeeId')
   @Roles(Role.ADMIN, Role.TEACHER, Role.STUDENT)
-  async getPaymentsByFee(
-    @Param('feeId') feeId: string,
+  async getPaymentsByStudentFee(
+    @Param('studentFeeId') studentFeeId: string,
     @Query() query: BaseQueryDto,
   ) {
-    return this.paymentService.getPaymentsByFee(feeId, query);
+    return this.paymentService.getPaymentsByStudentFee(studentFeeId, query);
   }
 
   @Get('student/:studentId')
   @Roles(Role.ADMIN, Role.TEACHER, Role.STUDENT)
-  async getPaymentsByStudent(
-    @Param('studentId') studentId: string,
-    @Query() query: BaseQueryDto,
-  ) {
+  async getPaymentsByStudent(@Param('studentId') studentId: string, @Query() query: BaseQueryDto) {
     return this.paymentService.getPaymentsByStudent(studentId, query);
   }
 
