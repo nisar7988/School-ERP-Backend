@@ -139,7 +139,6 @@ export class AcademicYearService {
   }
 
   async getOrCreateCurrentYear() {
-    console.log('Checking for current academic year'); // Debugging line
     const yearString = await this.getCurrentYear();
 
     const existing = await this.prisma.academicYear.findUnique({
@@ -149,7 +148,6 @@ export class AcademicYearService {
     if (existing) {
       return existing;
     }
-    console.log(`Creating new academic year: ${yearString}`);
     return this.prisma.academicYear.create({
       data: {
         year: yearString,

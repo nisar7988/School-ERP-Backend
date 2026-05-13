@@ -16,7 +16,6 @@ export class UsersService {
         password: true,
       },
     });
-    console.log('User found by email:', user); // Debugging line
 
     if (!user) {
       throw new NotFoundException('User not found');
@@ -82,11 +81,10 @@ export class UsersService {
   }
 
   async getUserDetails(id: string): Promise<any> {
-    console.log('Fetching user details for ID:', id); // Debugging line
     const user = await this.prisma.user.findUnique({
       where: { id },
       include: {
-        studentProfile: { include: { enrollments: true } },
+        studentProfile: { include: { enrollments: { include: { class: true } } } },
         teacherProfile: true,
       },
     });

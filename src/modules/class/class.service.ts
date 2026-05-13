@@ -58,11 +58,8 @@ export class ClassService {
     return schoolClass;
   }
   async create(data: CreateClassDto) {
-    console.log('Creating class with data:', data); // Debugging line
     const { name, section, academicYearId } = data;
-    console.log('Creating class with data:', data); // Debugging line
     let finalAcademicYearId = academicYearId;
-    console.log('Received academicYearId:', academicYearId); // Debugging line
     if (!finalAcademicYearId) {
       const currentYear = await this.academicYearService.getOrCreateCurrentYear();
 

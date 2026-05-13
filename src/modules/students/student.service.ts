@@ -88,7 +88,6 @@ export class StudentService {
   }
 
   async getAllStudents(query: BaseQueryDto) {
-    console.log('query for get students', query);
     const { classId, page = 1, limit = 10 } = query;
     const { skip, take } = buildPagination(query.page, query.limit);
 
@@ -120,7 +119,6 @@ export class StudentService {
         where,
       }),
     ]);
-    console.log('students', students);
     return createPaginatedResponse(students, total, page, limit);
   }
 

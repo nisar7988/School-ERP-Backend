@@ -38,10 +38,11 @@ export class ScheduleService {
   }
 
   async getScheduleForClass(classId: string) {
-    return await this.prisma.schedule.findMany({
+    const schedule = await this.prisma.schedule.findMany({
       where: { classId },
       include: { subject: true, teacher: { include: { user: true } } },
     });
+    return schedule;
   }
 
   async getScheduleForTeacher(teacherId: string) {

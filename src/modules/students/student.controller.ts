@@ -28,7 +28,6 @@ export class StudentController {
   @Post()
   @Roles(Role.ADMIN, Role.TEACHER)
   async addStudent(@Body() studentData: CreateStudentDto) {
-    console.log(studentData);
     return this.studentService.addStudent(studentData);
   }
 
