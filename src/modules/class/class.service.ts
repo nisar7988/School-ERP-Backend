@@ -14,12 +14,25 @@ export class ClassService {
     private readonly academicYearService: AcademicYearService,
   ) {}
   async findAll(query: BaseQueryDto) {
-    const { classId, page = 1, limit = 10 } = query;
+    const { classId, page = 1, limit = 10, search } = query;
     const { skip, take } = buildPagination(query.page, query.limit);
+    
+    const where: any = {};
+    if (classId) {
+      where.id = classId;
+    }
+    if (search) {
+      where.OR = [
+        { name: { contains: search, mode: 'insensitive' } },
+        { section: { contains: search, mode: 'insensitive' } },
+      ];
+    }
+
     const [classes, total] = await this.prisma.$transaction([
       this.prisma.schoolClass.findMany({
         skip,
         take,
+        where,
         include: {
           academicYear: true,
           students: true,
@@ -27,10 +40,9 @@ export class ClassService {
           staff: {
             include: { teacher: { include: { user: true } } },
           },
-          ...(classId && { where: { id: classId } }),
         },
       }),
-      this.prisma.schoolClass.count(),
+      this.prisma.schoolClass.count({ where }),
     ]);
 
     return createPaginatedResponse(classes, total, page, limit);
@@ -175,21 +187,39 @@ export class ClassService {
     });
   }
 
-  async getClassesForTeacher(userId: string) {
-    const data = await this.prisma.schoolClass.findMany({
-      where: {
-        staff: {
-          some: {
-            teacher: {
-              userId: userId,
-            },
+  async getClassesForTeacher(userId: string, query: BaseQueryDto) {
+    const { page = 1, limit = 10, search } = query;
+    const { skip, take } = buildPagination(page, limit);
+
+    const where: any = {
+      staff: {
+        some: {
+          teacher: {
+            userId: userId,
           },
         },
       },
-      include: {
-        academicYear: true,
-      },
-    });
-    return createPaginatedResponse(data, data.length, 1, data.length);
+    };
+
+    if (search) {
+      where.OR = [
+        { name: { contains: search, mode: 'insensitive' } },
+        { section: { contains: search, mode: 'insensitive' } },
+      ];
+    }
+
+    const [data, total] = await this.prisma.$transaction([
+      this.prisma.schoolClass.findMany({
+        where,
+        skip,
+        take,
+        include: {
+          academicYear: true,
+        },
+      }),
+      this.prisma.schoolClass.count({ where }),
+    ]);
+
+    return createPaginatedResponse(data, total, page, limit);
   }
 }

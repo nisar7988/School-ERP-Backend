@@ -3,6 +3,9 @@ import { PrismaService } from '../../prisma/prisma.service';
 import { CreateFeeStructureDto } from './dto/create-fee-structure.dto';
 import { CreateStudentFeeDto } from './dto/create-student-fee.dto';
 import { UpdateStudentFeeDto } from './dto/update-student-fee.dto';
+import { createPaginatedResponse } from '../../common/utils/response.util';
+import { buildPagination } from '../../common/utils/pagination.util';
+import { BaseQueryDto } from '../../common/dto/query.dto';
 
 @Injectable()
 export class FeesService {
@@ -53,8 +56,31 @@ export class FeesService {
   }
 
   //admin & teacher can view fee structure for all classes
-  async getAllFeeStructures() {
-    return this.prisma.feeStructure.findMany();
+  async getAllFeeStructures(query: BaseQueryDto) {
+    const { page = 1, limit = 10, search, classId } = query;
+    const { skip, take } = buildPagination(page, limit);
+
+    const where: any = {};
+    if (search) {
+      where.title = { contains: search, mode: 'insensitive' };
+    }
+    if (classId) {
+      where.classId = classId;
+    }
+
+    const [structures, total] = await this.prisma.$transaction([
+      this.prisma.feeStructure.findMany({
+        skip,
+        take,
+        where,
+        include: {
+          class: true,
+        },
+      }),
+      this.prisma.feeStructure.count({ where }),
+    ]);
+
+    return createPaginatedResponse(structures, total, page, limit);
   }
 
   //admin & teacher can view fee structure for a class
@@ -120,16 +146,35 @@ export class FeesService {
     });
   }
 
-  async getAllStudentFees() {
-    return this.prisma.studentFee.findMany({
-      include: {
-        student: true,
-        feeStructure: true,
-        payments: true,
-      },
-    });
-  }
+  async getAllStudentFees(query: any) {
+    const { page = 1, limit = 10, search } = query;
+    const { skip, take } = buildPagination(page, limit);
 
+    const where: any = {};
+    if (search) {
+      where.OR = [
+        { student: { user: { firstName: { contains: search, mode: 'insensitive' } } } },
+        { student: { user: { lastName: { contains: search, mode: 'insensitive' } } } },
+        { student: { admissionNo: { contains: search, mode: 'insensitive' } } },
+      ];
+    }
+
+    const [fees, total] = await this.prisma.$transaction([
+      this.prisma.studentFee.findMany({
+        skip,
+        take,
+        where,
+        include: {
+          student: { include: { user: true } },
+          feeStructure: true,
+          payments: true,
+        },
+      }),
+      this.prisma.studentFee.count({ where }),
+    ]);
+
+    return createPaginatedResponse(fees, total, page, limit);
+  }
 
   async getStudentFeesByStudent(studentId: string) {
     return this.prisma.studentFee.findMany({

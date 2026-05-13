@@ -41,15 +41,26 @@ export class TeacherService {
   }
 
   async getAllTeachers(query: BaseQueryDto) {
-    const { page = 1, limit = 10 } = query;
-    const { skip, take } = buildPagination(query.page, query.limit);
+    const { page = 1, limit = 10, search } = query;
+    const { skip, take } = buildPagination(page, limit);
+
+    const where: any = {};
+    if (search) {
+      where.OR = [
+        { user: { firstName: { contains: search, mode: 'insensitive' } } },
+        { user: { lastName: { contains: search, mode: 'insensitive' } } },
+        { employeeId: { contains: search, mode: 'insensitive' } },
+      ];
+    }
+
     const [teachers, total] = await this.prisma.$transaction([
       this.prisma.teacher.findMany({
         skip,
         take,
+        where,
         include: { user: true },
       }),
-      this.prisma.teacher.count(),
+      this.prisma.teacher.count({ where }),
     ]);
 
     return createPaginatedResponse(teachers, total, page, limit);

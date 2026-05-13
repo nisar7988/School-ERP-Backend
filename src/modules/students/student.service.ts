@@ -90,18 +90,26 @@ export class StudentService {
 
 
   async getAllStudents(query: BaseQueryDto) {
-    const { classId, page = 1, limit = 10 } = query;
-    const { skip, take } = buildPagination(query.page, query.limit);
+    const { classId, page = 1, limit = 10, search } = query;
+    const { skip, take } = buildPagination(page, limit);
 
-    const where = classId
-      ? {
-          enrollments: {
-            some: {
-              classId: classId,
-            },
-          },
-        }
-      : {};
+    const where: any = {};
+    
+    if (classId) {
+      where.enrollments = {
+        some: {
+          classId: classId,
+        },
+      };
+    }
+
+    if (search) {
+      where.OR = [
+        { user: { firstName: { contains: search, mode: 'insensitive' } } },
+        { user: { lastName: { contains: search, mode: 'insensitive' } } },
+        { admissionNo: { contains: search, mode: 'insensitive' } },
+      ];
+    }
 
     const [students, total] = await this.prisma.$transaction([
       this.prisma.student.findMany({

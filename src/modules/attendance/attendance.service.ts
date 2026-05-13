@@ -10,7 +10,7 @@ export class AttendanceService {
   constructor(private readonly prisma: PrismaService) {}
 
   async findAll(query: AttendanceQueryDto) {
-    const { status, page = 1, limit = 10, sortBy = 'createdAt', order = 'desc' } = query;
+    const { status, page = 1, limit = 10, sortBy = 'createdAt', order = 'desc', search } = query;
 
     const pagination = buildPagination(page, limit);
 
@@ -18,6 +18,14 @@ export class AttendanceService {
 
     if (status) {
       where.status = status;
+    }
+
+    if (search) {
+      where.OR = [
+        { student: { user: { firstName: { contains: search, mode: 'insensitive' } } } },
+        { student: { user: { lastName: { contains: search, mode: 'insensitive' } } } },
+        { student: { admissionNo: { contains: search, mode: 'insensitive' } } },
+      ];
     }
 
     const allowedSortFields = ['date', 'status', 'studentId', 'createdAt'];

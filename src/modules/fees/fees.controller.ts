@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Patch, Delete, Body, Param } from '@nestjs/common';
+import { Controller, Get, Post, Patch, Delete, Body, Param, Query } from '@nestjs/common';
 import { FeesService } from './fees.service';
 import { CreateFeeStructureDto } from './dto/create-fee-structure.dto';
 import { UpdateFeeStructureDto } from './dto/update-fee-structure.dto';
@@ -7,6 +7,7 @@ import { UpdateStudentFeeDto } from './dto/update-student-fee.dto';
 import { Roles } from '../../common/decorators/roles.decorator';
 import { Role } from '../../common/enums/roles.enum';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
+import { BaseQueryDto } from '../../common/dto/query.dto';
 
 @ApiTags('fees')
 @ApiBearerAuth('access-token')
@@ -37,8 +38,8 @@ export class FeesController {
 
   @Get('structures')
   @Roles(Role.ADMIN, Role.TEACHER)
-  async getAllFeeStructures() {
-    return this.feesService.getAllFeeStructures();
+  async getAllFeeStructures(@Query() query: BaseQueryDto) {
+    return this.feesService.getAllFeeStructures(query);
   }
 
   @Get('structures/class/:classId')
@@ -77,8 +78,8 @@ export class FeesController {
 
   @Get('student-fees')
   @Roles(Role.ADMIN, Role.TEACHER)
-  async getAllStudentFees() {
-    return this.feesService.getAllStudentFees();
+  async getAllStudentFees(@Query() query: BaseQueryDto) {
+    return this.feesService.getAllStudentFees(query);
   }
 
   @Get('student-fees/student/:studentId')

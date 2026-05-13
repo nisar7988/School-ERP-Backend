@@ -23,9 +23,9 @@ export class TeacherController {
     return this.teacherService.getAllTeachers(query);
   }
   @Get('classes')
-  @Roles( Role.TEACHER)
-  getClassesForTeacher(@Req() req) {
-    return this.classService.getClassesForTeacher(req.user.userId);
+  @Roles(Role.TEACHER)
+  getClassesForTeacher(@Req() req, @Query() query: BaseQueryDto) {
+    return this.classService.getClassesForTeacher(req.user.userId, query);
   }
 
   @Get(':id')

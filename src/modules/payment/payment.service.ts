@@ -12,13 +12,33 @@ export class PaymentService {
   constructor(private readonly prisma: PrismaService) {}
 
   async getAllPayments(query: BaseQueryDto) {
-    const { page = 1, limit = 10 } = query;
+    const { page = 1, limit = 10, search } = query;
     const { skip, take } = buildPagination(page, limit);
-    const total = await this.prisma.payment.count();
-    const payments = await this.prisma.payment.findMany({
-      skip,
-      take,
-    });
+
+    const where: any = {};
+    if (search) {
+      where.OR = [
+        { studentFee: { student: { user: { firstName: { contains: search, mode: 'insensitive' } } } } },
+        { studentFee: { student: { user: { lastName: { contains: search, mode: 'insensitive' } } } } },
+        { studentFee: { student: { admissionNo: { contains: search, mode: 'insensitive' } } } },
+        { referenceNo: { contains: search, mode: 'insensitive' } },
+      ];
+    }
+
+    const [payments, total] = await this.prisma.$transaction([
+      this.prisma.payment.findMany({
+        skip,
+        take,
+        where,
+        include: {
+          studentFee: {
+            include: { student: { include: { user: true } }, feeStructure: true },
+          },
+        },
+        orderBy: { paidAt: 'desc' },
+      }),
+      this.prisma.payment.count({ where }),
+    ]);
 
     return createPaginatedResponse(payments, total, page, limit);
   }
