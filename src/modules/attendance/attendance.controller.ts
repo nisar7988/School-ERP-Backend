@@ -17,11 +17,6 @@ export class AttendanceController {
     return this.attendanceService.findAll(query);
   }
 
-  @Get(':id')
-  @Roles(Role.ADMIN, Role.TEACHER, Role.STUDENT)
-  async getAttendanceById(@Param('id') id: string) {
-    return this.attendanceService.getAttendanceById(id);
-  }
   @Get('student/:studentId')
   @Roles(Role.ADMIN, Role.TEACHER, Role.STUDENT)
   async getAttendanceByStudentId(

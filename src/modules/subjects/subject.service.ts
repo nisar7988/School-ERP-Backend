@@ -48,9 +48,6 @@ export class SubjectService {
     return createPaginatedResponse(subjects, total, page, limit);
   }
 
-  async getSubjectsByClass(classId: string, query: BaseQueryDto) {
-    return this.findAll({ ...query, classId });
-  }
 
   async findOne(id: string) {
     const subject = await this.prisma.subject.findUnique({

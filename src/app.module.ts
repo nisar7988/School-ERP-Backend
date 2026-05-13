@@ -2,11 +2,8 @@ import { Module } from '@nestjs/common';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { StudentModule } from './modules/students/student.module';
-import { EnrollmentModule } from './modules/enrollment/enrollment.module';
-import { AcademicYearModule } from './modules/academic-year/academic-year.module';
-import { ClassStaffModule } from './modules/class-staff/class-staff.module';
-import { SubjectTeacherModule } from './modules/subject-teacher/subject-teacher.module';
 import { PaymentModule } from './modules/payment/payment.module';
+import { AcademicYearModule } from './modules/academic-year/academic-year.module';
 
 import { ConfigModule } from '@nestjs/config';
 import { PrismaModule } from './prisma/prisma.module';
@@ -27,11 +24,8 @@ import { ScheduleModule } from './modules/schedule/schedule.module';
   imports: [
     ConfigModule.forRoot({ isGlobal: true }),
     AcademicYearModule,
-    ClassStaffModule,
-    SubjectTeacherModule,
-    PaymentModule,
     StudentModule,
-    EnrollmentModule,
+    PaymentModule,
     PrismaModule,
     AuthModule,
     UsersModule,

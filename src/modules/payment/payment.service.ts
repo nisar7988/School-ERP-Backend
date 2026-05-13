@@ -94,35 +94,6 @@ export class PaymentService {
     });
   }
 
-  async getPaymentsByStudentFee(studentFeeId: string, query: BaseQueryDto) {
-    const { page = 1, limit = 10 } = query;
-    const { skip, take } = buildPagination(page, limit);
-
-    const studentFee = await this.prisma.studentFee.findUnique({
-      where: { id: studentFeeId },
-    });
-
-    if (!studentFee) {
-      throw new NotFoundException('Student fee record not found');
-    }
-
-    const [payments, total] = await this.prisma.$transaction([
-      this.prisma.payment.findMany({
-        skip,
-        take,
-        where: { studentFeeId },
-        include: {
-          studentFee: {
-            include: { student: { include: { user: true } }, feeStructure: true },
-          },
-        },
-        orderBy: { paidAt: 'desc' },
-      }),
-      this.prisma.payment.count({ where: { studentFeeId } }),
-    ]);
-
-    return createPaginatedResponse(payments, total, page, limit);
-  }
 
   async getPaymentsByStudent(studentId: string, query: BaseQueryDto) {
     const { page = 1, limit = 10 } = query;
@@ -156,22 +127,6 @@ export class PaymentService {
     return createPaginatedResponse(payments, total, page, limit);
   }
 
-  async getPaymentById(id: string) {
-    const payment = await this.prisma.payment.findUnique({
-      where: { id },
-      include: {
-        studentFee: {
-          include: { student: { include: { user: true } }, feeStructure: true },
-        },
-      },
-    });
-
-    if (!payment) {
-      throw new NotFoundException('Payment not found');
-    }
-
-    return payment;
-  }
 
   async getStudentFeesSummary(studentId: string) {
     const student = await this.prisma.student.findUnique({

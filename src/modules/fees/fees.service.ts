@@ -130,16 +130,6 @@ export class FeesService {
     });
   }
 
-  async getStudentFeeById(id: string) {
-    return this.prisma.studentFee.findUnique({
-      where: { id },
-      include: {
-        student: true,
-        feeStructure: true,
-        payments: true,
-      },
-    });
-  }
 
   async getStudentFeesByStudent(studentId: string) {
     return this.prisma.studentFee.findMany({
@@ -149,10 +139,6 @@ export class FeesService {
         payments: true,
       },
     });
-  }
-
-  async getStudentFeeDetails(studentId: string) {
-    return this.getStudentFeesByStudent(studentId);
   }
 
   async createStudentFeesForClassStudents(classId: string, dueDate: string) {

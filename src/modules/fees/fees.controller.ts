@@ -53,11 +53,6 @@ export class FeesController {
     return this.feesService.getPendingFeesForClass(classId);
   }
 
-  @Get('student/:studentId')
-  @Roles(Role.ADMIN, Role.TEACHER, Role.STUDENT)
-  async getStudentFeeDetails(@Param('studentId') studentId: string) {
-    return this.feesService.getStudentFeeDetails(studentId);
-  }
 
   @Post('student-fees')
   @Roles(Role.ADMIN)
@@ -84,12 +79,6 @@ export class FeesController {
   @Roles(Role.ADMIN, Role.TEACHER)
   async getAllStudentFees() {
     return this.feesService.getAllStudentFees();
-  }
-
-  @Get('student-fees/:id')
-  @Roles(Role.ADMIN, Role.TEACHER, Role.STUDENT)
-  async getStudentFeeById(@Param('id') id: string) {
-    return this.feesService.getStudentFeeById(id);
   }
 
   @Get('student-fees/student/:studentId')

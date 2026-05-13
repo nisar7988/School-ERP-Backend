@@ -25,11 +25,6 @@ export class SubjectController {
     return this.subjectService.findAll(query);
   }
 
-  @Get('class/:classId')
-  @Roles(Role.ADMIN, Role.TEACHER, Role.STUDENT)
-  async getSubjectsByClass(@Param('classId') classId: string, @Query() query: BaseQueryDto) {
-    return this.subjectService.getSubjectsByClass(classId, query);
-  }
 
   @Get(':id')
   @Roles(Role.ADMIN, Role.TEACHER, Role.STUDENT)

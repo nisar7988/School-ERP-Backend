@@ -61,11 +61,6 @@ export class AttendanceService {
     });
   }
 
-  async getAttendanceById(id: string) {
-    return this.prisma.attendance.findUnique({
-      where: { id },
-    });
-  }
 
   async getAttendanceByStudentId(studentId: string, query: AttendanceQueryDto) {
     const { month, status } = query;

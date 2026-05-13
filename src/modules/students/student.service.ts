@@ -6,9 +6,13 @@ import { BaseQueryDto } from '../../common/dto/query.dto';
 import { buildPagination } from '../../common/utils/pagination.util';
 import { createPaginatedResponse } from '../../common/utils/response.util';
 import * as bcrypt from 'bcrypt';
+import { FeesService } from '../fees/fees.service';
 @Injectable()
 export class StudentService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly feeService: FeesService,
+  ) {}
 
   async addStudent(dto: CreateStudentDto) {
     const {
@@ -68,6 +72,8 @@ export class StudentService {
         },
       });
 
+      //link studetn to class fees
+      await this.feeService.autoGenerateFeesForStudent(student.id);
       return {
         student,
         credentials: {
@@ -82,10 +88,6 @@ export class StudentService {
     }
   }
 
-  // 🔑 Secure password generator
-  private generatePassword(): string {
-    return Math.random().toString(36).slice(-8); // improve if needed
-  }
 
   async getAllStudents(query: BaseQueryDto) {
     const { classId, page = 1, limit = 10 } = query;

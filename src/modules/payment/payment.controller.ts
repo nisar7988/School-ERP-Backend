@@ -23,15 +23,6 @@ export class PaymentController {
     return this.paymentService.getAllPayments(query);
   }
 
-  @Get('student-fee/:studentFeeId')
-  @Roles(Role.ADMIN, Role.TEACHER, Role.STUDENT)
-  async getPaymentsByStudentFee(
-    @Param('studentFeeId') studentFeeId: string,
-    @Query() query: BaseQueryDto,
-  ) {
-    return this.paymentService.getPaymentsByStudentFee(studentFeeId, query);
-  }
-
   @Get('student/:studentId')
   @Roles(Role.ADMIN, Role.TEACHER, Role.STUDENT)
   async getPaymentsByStudent(@Param('studentId') studentId: string, @Query() query: BaseQueryDto) {
@@ -42,12 +33,6 @@ export class PaymentController {
   @Roles(Role.ADMIN, Role.TEACHER, Role.STUDENT)
   async getStudentFeesSummary(@Param('studentId') studentId: string) {
     return this.paymentService.getStudentFeesSummary(studentId);
-  }
-
-  @Get(':id')
-  @Roles(Role.ADMIN, Role.TEACHER, Role.STUDENT)
-  async getPaymentById(@Param('id') id: string) {
-    return this.paymentService.getPaymentById(id);
   }
 
   @Delete(':id')
