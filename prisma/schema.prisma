@@ -47,6 +47,16 @@ enum ClassRole {
   SUBJECT_TEACHER
 }
 
+enum DayOfWeek {
+  MONDAY
+  TUESDAY
+  WEDNESDAY
+  THURSDAY
+  FRIDAY
+  SATURDAY
+  SUNDAY
+}
+
 //
 // --- MODELS ---
 //
@@ -82,7 +92,7 @@ model Student {
   address          String?
   gender           Gender?
   fatherName       String?
-  motherName       String
+  motherName       String?
   emergencyContact String?
 
   userId String @unique
@@ -263,6 +273,8 @@ model FeeStructure {
 
   createdAt   DateTime     @default(now())
   studentFees StudentFee[]
+  
+  @@index([classId])
 }
 
 model StudentFee {
@@ -282,6 +294,10 @@ model StudentFee {
   feeStructure FeeStructure @relation(fields: [feeStructureId], references: [id])
 
   payments Payment[]
+
+  @@unique([studentId, feeStructureId])
+  @@index([studentId])
+  @@index([feeStructureId])
 }
 
 //
@@ -300,18 +316,20 @@ model Payment {
   paidAt DateTime @default(now())
 
   studentFee StudentFee @relation(fields: [studentFeeId], references: [id])
+
+  @@index([studentFeeId])
 }
 
 //Schedule 
 model Schedule {
-  id        String   @id @default(uuid())
+  id        String    @id @default(uuid())
   classId   String
   subjectId String
   teacherId String
   startTime DateTime
   endTime   DateTime
   room      String?
-  dayOfWeek String?
+  dayOfWeek DayOfWeek @default(MONDAY)
 
   class     SchoolClass @relation(fields: [classId], references: [id])
   subject   Subject     @relation(fields: [subjectId], references: [id])
@@ -321,4 +339,5 @@ model Schedule {
 
   @@index([classId])
   @@index([subjectId])
+  @@index([teacherId])
 }

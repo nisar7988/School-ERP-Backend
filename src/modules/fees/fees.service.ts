@@ -6,38 +6,43 @@ import { UpdateStudentFeeDto } from './dto/update-student-fee.dto';
 import { createPaginatedResponse } from '../../common/utils/response.util';
 import { buildPagination } from '../../common/utils/pagination.util';
 import { BaseQueryDto } from '../../common/dto/query.dto';
+import Decimal from 'decimal.js';
 
 @Injectable()
 export class FeesService {
   constructor(private readonly prisma: PrismaService) {}
 
-  //admin add fee for class
+  // admin add fee for class
   async createFeeForClass(data: CreateFeeStructureDto) {
-    const feeStructure = await this.prisma.feeStructure.create({ data });
+    return this.prisma.$transaction(async (tx) => {
+      const feeStructure = await tx.feeStructure.create({ data });
 
-    // Auto-generate StudentFee records for all enrolled students in this class
-    const enrollments = await this.prisma.enrollment.findMany({
-      where: { classId: data.classId, endDate: null },
-    });
+      // Auto-generate StudentFee records for all enrolled students in this class
+      const enrollments = await tx.enrollment.findMany({
+        where: { classId: data.classId, endDate: null },
+      });
 
-    const dueDate = new Date();
-    dueDate.setMonth(dueDate.getMonth() + 1);
+      if (enrollments.length > 0) {
+        const dueDate = new Date();
+        dueDate.setMonth(dueDate.getMonth() + 1);
 
-    for (const enrollment of enrollments) {
-      await this.prisma.studentFee.create({
-        data: {
+        const studentFeesData = enrollments.map((enrollment) => ({
           studentId: enrollment.studentId,
           feeStructureId: feeStructure.id,
           amount: feeStructure.amount,
           dueDate,
           paidAmount: 0,
           pendingAmount: feeStructure.amount,
-          status: 'PENDING',
-        },
-      });
-    }
+          status: 'PENDING' as const,
+        }));
 
-    return feeStructure;
+        await tx.studentFee.createMany({
+          data: studentFeesData,
+        });
+      }
+
+      return feeStructure;
+    });
   }
 
   //admin edit fee for class
@@ -129,9 +134,20 @@ export class FeesService {
 
     const updatedData: any = { ...data };
     if (data.amount !== undefined) {
-      const paidAmount = Number(existing.paidAmount ?? 0);
-      const pendingAmount = Number(data.amount) - paidAmount;
-      updatedData.pendingAmount = pendingAmount >= 0 ? pendingAmount : 0;
+      const amount = new Decimal(data.amount);
+      const paidAmount = new Decimal(existing.paidAmount.toString());
+      const pendingAmount = amount.minus(paidAmount);
+      
+      updatedData.pendingAmount = pendingAmount.greaterThanOrEqualTo(0) ? pendingAmount : new Decimal(0);
+      
+      // Update status based on new amount
+      if (paidAmount.equals(0)) {
+        updatedData.status = 'PENDING';
+      } else if (paidAmount.greaterThanOrEqualTo(amount)) {
+        updatedData.status = 'PAID';
+      } else {
+        updatedData.status = 'PARTIAL';
+      }
     }
 
     return this.prisma.studentFee.update({
@@ -204,40 +220,55 @@ export class FeesService {
       throw new NotFoundException(`No enrolled students found for class ${classId}`);
     }
 
-    const createdFees: any[] = [];
+    const dueDateObj = new Date(dueDate);
+    const studentFeesData: any[] = [];
+
+    // Pre-fetch existing fees to avoid duplicates if createMany skipDuplicates isn't enough
+    // Or just use skipDuplicates: true if the DB unique constraints are set up correctly
+    // Looking at schema, StudentFee doesn't have a unique constraint on [studentId, feeStructureId]
+    // Wait, let's check schema again.
 
     for (const enrollment of enrollments) {
       for (const feeStructure of feeStructures) {
-        const existing = await this.prisma.studentFee.findFirst({
-          where: {
-            studentId: enrollment.studentId,
-            feeStructureId: feeStructure.id,
-          },
+        studentFeesData.push({
+          studentId: enrollment.studentId,
+          feeStructureId: feeStructure.id,
+          amount: feeStructure.amount,
+          dueDate: dueDateObj,
+          paidAmount: 0,
+          pendingAmount: feeStructure.amount,
+          status: 'PENDING',
         });
-
-        if (!existing) {
-          const fee = await this.prisma.studentFee.create({
-            data: {
-              studentId: enrollment.studentId,
-              feeStructureId: feeStructure.id,
-              amount: feeStructure.amount,
-              dueDate: new Date(dueDate),
-              paidAmount: 0,
-              pendingAmount: feeStructure.amount,
-              status: 'PENDING',
-            },
-          });
-          createdFees.push(fee);
-        }
       }
+    }
+
+    // Since there's no unique constraint on StudentFee [studentId, feeStructureId] in schema.prisma,
+    // we must manually filter out existing ones before createMany if we want to avoid duplicates.
+    const existingFees = await this.prisma.studentFee.findMany({
+      where: {
+        studentId: { in: enrollments.map((e) => e.studentId) },
+        feeStructureId: { in: feeStructures.map((f) => f.id) },
+      },
+      select: { studentId: true, feeStructureId: true },
+    });
+
+    const existingMap = new Set(existingFees.map((f) => `${f.studentId}-${f.feeStructureId}`));
+
+    const finalData = studentFeesData.filter(
+      (f) => !existingMap.has(`${f.studentId}-${f.feeStructureId}`),
+    );
+
+    if (finalData.length > 0) {
+      await this.prisma.studentFee.createMany({
+        data: finalData,
+      });
     }
 
     return {
       classId,
       studentsProcessed: enrollments.length,
       feeStructuresApplied: feeStructures.length,
-      feesCreated: createdFees.length,
-      fees: createdFees,
+      feesCreated: finalData.length,
     };
   }
 
@@ -261,46 +292,51 @@ export class FeesService {
       };
     }
 
-    const createdFees: any[] = [];
+    const studentFeesData: any[] = [];
+    const classIds = student.enrollments.map((e) => e.classId);
 
-    for (const enrollment of student.enrollments) {
-      const feeStructures = await this.prisma.feeStructure.findMany({
-        where: { classId: enrollment.classId },
+    const feeStructures = await this.prisma.feeStructure.findMany({
+      where: { classId: { in: classIds } },
+    });
+
+    const dueDate = new Date();
+    dueDate.setMonth(dueDate.getMonth() + 1);
+
+    for (const feeStructure of feeStructures) {
+      studentFeesData.push({
+        studentId,
+        feeStructureId: feeStructure.id,
+        amount: feeStructure.amount,
+        dueDate,
+        paidAmount: 0,
+        pendingAmount: feeStructure.amount,
+        status: 'PENDING',
       });
+    }
 
-      for (const feeStructure of feeStructures) {
-        const existing = await this.prisma.studentFee.findFirst({
-          where: {
-            studentId,
-            feeStructureId: feeStructure.id,
-          },
-        });
+    // Check for existing to avoid duplicates
+    const existingFees = await this.prisma.studentFee.findMany({
+      where: {
+        studentId,
+        feeStructureId: { in: feeStructures.map((f) => f.id) },
+      },
+      select: { feeStructureId: true },
+    });
 
-        if (!existing) {
-          const dueDate = new Date();
-          dueDate.setMonth(dueDate.getMonth() + 1);
+    const existingIds = new Set(existingFees.map((f) => f.feeStructureId));
 
-          const fee = await this.prisma.studentFee.create({
-            data: {
-              studentId,
-              feeStructureId: feeStructure.id,
-              amount: feeStructure.amount,
-              dueDate,
-              paidAmount: 0,
-              pendingAmount: feeStructure.amount,
-              status: 'PENDING',
-            },
-          });
-          createdFees.push(fee);
-        }
-      }
+    const finalData = studentFeesData.filter((f) => !existingIds.has(f.feeStructureId));
+
+    if (finalData.length > 0) {
+      await this.prisma.studentFee.createMany({
+        data: finalData,
+      });
     }
 
     return {
       studentId,
       enrollmentsProcessed: student.enrollments.length,
-      feesCreated: createdFees.length,
-      fees: createdFees,
+      feesCreated: finalData.length,
     };
   }
 

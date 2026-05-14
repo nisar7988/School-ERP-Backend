@@ -1,6 +1,7 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { Type } from 'class-transformer';
-import { IsDate, IsNotEmpty, IsOptional, IsString, IsUUID } from 'class-validator';
+import { IsDate, IsEnum, IsNotEmpty, IsOptional, IsString, IsUUID } from 'class-validator';
+import { DayOfWeek } from '@prisma/client';
 
 export class CreateScheduleDto {
   @ApiProperty({
@@ -45,11 +46,12 @@ export class CreateScheduleDto {
 
   @ApiPropertyOptional({
     description: 'The day of the week for the schedule',
-    example: 'MON',
+    enum: DayOfWeek,
+    example: DayOfWeek.MONDAY,
   })
   @IsOptional()
-  @IsString()
-  dayOfWeek?: string;
+  @IsEnum(DayOfWeek)
+  dayOfWeek?: DayOfWeek;
 
   @ApiProperty({
     description: 'The ID of the teacher',

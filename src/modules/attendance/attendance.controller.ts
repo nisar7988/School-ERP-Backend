@@ -17,13 +17,13 @@ export class AttendanceController {
     return this.attendanceService.findAll(query);
   }
 
-  @Get('student/:studentId')
+  @Get('student/:userId')
   @Roles(Role.ADMIN, Role.TEACHER, Role.STUDENT)
   async getAttendanceByStudentId(
-    @Param('studentId') studentId: string,
+    @Param('userId') userId: string,
     @Query() query: AttendanceQueryDto,
   ) {
-    return this.attendanceService.getAttendanceByStudentId(studentId, query);
+    return this.attendanceService.getAttendanceByStudentId(userId, query);
   }
 
   @Post()

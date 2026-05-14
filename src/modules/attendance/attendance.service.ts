@@ -70,11 +70,11 @@ export class AttendanceService {
   }
 
 
-  async getAttendanceByStudentId(studentId: string, query: AttendanceQueryDto) {
+  async getAttendanceByStudentId(userId: string, query: AttendanceQueryDto) {
     const { month, status } = query;
 
     const student = await this.prisma.student.findUnique({
-      where: { userId: studentId },
+      where: { userId },
     });
 
     if (!student) {

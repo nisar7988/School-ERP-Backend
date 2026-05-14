@@ -50,8 +50,6 @@ export class PaymentService {
       where: { id: studentFeeId },
       include: {
         payments: true,
-        student: { include: { user: true } },
-        feeStructure: true,
       },
     });
 
@@ -59,46 +57,30 @@ export class PaymentService {
       throw new NotFoundException('Student fee record not found');
     }
 
-    if (amount <= 0) {
+    const paymentAmount = new Decimal(amount);
+    if (paymentAmount.lessThanOrEqualTo(0)) {
       throw new BadRequestException('Payment amount must be greater than 0');
     }
 
-    const pendingAmount = Number(studentFee.pendingAmount ?? studentFee.amount ?? 0);
-    if (amount > pendingAmount) {
+    const currentPending = new Decimal(studentFee.pendingAmount.toString());
+    if (paymentAmount.greaterThan(currentPending)) {
       throw new BadRequestException(
-        `Payment amount ${amount} exceeds remaining amount ${pendingAmount}`,
+        `Payment amount ${paymentAmount} exceeds remaining amount ${currentPending}`,
       );
     }
-
-    const paidAmount = Number(studentFee.paidAmount ?? 0);
-    const newPaidAmount = paidAmount + amount;
-    const newPendingAmount = pendingAmount - amount;
-    const newStatus: FeeStatus =
-      newPendingAmount <= 0
-        ? FeeStatus.PAID
-        : newPaidAmount > 0
-          ? FeeStatus.PARTIAL
-          : FeeStatus.PENDING;
 
     return this.prisma.$transaction(async (tx) => {
       const payment = await tx.payment.create({
         data: {
           studentFeeId,
-          amount,
+          amount: paymentAmount,
           method,
           referenceNo,
           paidAt: paidAt ? new Date(paidAt) : undefined,
         },
       });
 
-      await tx.studentFee.update({
-        where: { id: studentFeeId },
-        data: {
-          paidAmount: newPaidAmount,
-          pendingAmount: newPendingAmount >= 0 ? newPendingAmount : 0,
-          status: newStatus,
-        },
-      });
+      await this.syncStudentFee(studentFeeId, tx);
 
       return tx.payment.findUnique({
         where: { id: payment.id },
@@ -111,6 +93,42 @@ export class PaymentService {
           },
         },
       });
+    });
+  }
+
+  /**
+   * Recalculates and synchronizes the paidAmount, pendingAmount, and status of a StudentFee record.
+   * This ensures data integrity by deriving balances from the source of truth (Payments).
+   */
+  private async syncStudentFee(studentFeeId: string, tx: any) {
+    const fee = await tx.studentFee.findUnique({
+      where: { id: studentFeeId },
+      include: { payments: true },
+    });
+
+    if (!fee) return;
+
+    const totalPaid = fee.payments.reduce(
+      (sum, p) => sum.plus(new Decimal(p.amount.toString())),
+      new Decimal(0),
+    );
+    const totalAmount = new Decimal(fee.amount.toString());
+    const pendingAmount = totalAmount.minus(totalPaid);
+
+    let status: FeeStatus = FeeStatus.PENDING;
+    if (totalPaid.greaterThanOrEqualTo(totalAmount)) {
+      status = FeeStatus.PAID;
+    } else if (totalPaid.greaterThan(0)) {
+      status = FeeStatus.PARTIAL;
+    }
+
+    await tx.studentFee.update({
+      where: { id: studentFeeId },
+      data: {
+        paidAmount: totalPaid,
+        pendingAmount: pendingAmount.greaterThan(0) ? pendingAmount : new Decimal(0),
+        status: status,
+      },
     });
   }
 
@@ -211,45 +229,16 @@ export class PaymentService {
   async deletePayment(id: string) {
     const payment = await this.prisma.payment.findUnique({
       where: { id },
-      include: {
-        studentFee: {
-          include: { payments: true },
-        },
-      },
     });
 
     if (!payment) {
       throw new NotFoundException('Payment not found');
     }
 
-    const studentFee = payment.studentFee;
-    if (!studentFee) {
-      throw new NotFoundException('Related student fee record not found');
-    }
-
     return this.prisma.$transaction(async (tx) => {
       await tx.payment.delete({ where: { id } });
-
-      const remainingPayments = studentFee.payments.filter((p) => p.id !== id);
-      const totalPaid = remainingPayments.reduce((sum, p) => sum + Number(p.amount), 0);
-      const feeAmount = Number(studentFee.amount);
-      const newPendingAmount = feeAmount - totalPaid;
-
-      let newStatus: FeeStatus = FeeStatus.PENDING;
-      if (totalPaid >= feeAmount) {
-        newStatus = FeeStatus.PAID;
-      } else if (totalPaid > 0) {
-        newStatus = FeeStatus.PARTIAL;
-      }
-
-      return tx.studentFee.update({
-        where: { id: studentFee.id },
-        data: {
-          paidAmount: totalPaid,
-          pendingAmount: newPendingAmount >= 0 ? newPendingAmount : 0,
-          status: newStatus,
-        },
-      });
+      await this.syncStudentFee(payment.studentFeeId, tx);
+      return { message: 'Payment deleted successfully' };
     });
   }
 }
