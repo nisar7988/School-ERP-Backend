@@ -19,6 +19,7 @@ import { APP_GUARD } from '@nestjs/core';
 import { JwtAuthGuard } from './modules/auth/guards/jwt-auth.guard';
 import { ClaudinaryModule } from './modules/claudinary/claudinary.module';
 import { ScheduleModule } from './modules/schedule/schedule.module';
+import { AiModule } from './modules/ai/ai.module';
 
 @Module({
   imports: [
@@ -36,6 +37,7 @@ import { ScheduleModule } from './modules/schedule/schedule.module';
     SubjectModule,
     ClaudinaryModule,
     ScheduleModule,
+    AiModule,
   ],
   controllers: [AppController],
  providers: [

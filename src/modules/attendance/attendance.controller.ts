@@ -2,6 +2,7 @@ import { Controller, Patch, Post, Body, Param, Get, Query } from '@nestjs/common
 import { AttendanceService } from './attendance.service';
 import { UpdateAttendanceDto } from './dto/update-attendance.dto';
 import { CreateAttendanceDto } from './dto/create-attendance.dto';
+import { CreateBulkAttendanceDto } from './dto/create-bulk-attendance.dto';
 import { AttendanceQueryDto } from './dto/attendance-query.dto';
 import { Roles } from '../../common/decorators/roles.decorator';
 import { Role } from '../../common/enums/roles.enum';
@@ -30,6 +31,12 @@ export class AttendanceController {
   @Roles(Role.ADMIN, Role.TEACHER)
   async create(@Body() createAttendanceDto: CreateAttendanceDto) {
     return this.attendanceService.create(createAttendanceDto);
+  }
+
+  @Post('bulk')
+  @Roles(Role.ADMIN, Role.TEACHER)
+  async createBulk(@Body() createBulkAttendanceDto: CreateBulkAttendanceDto) {
+    return this.attendanceService.createBulk(createBulkAttendanceDto);
   }
 
   @Patch(':id')

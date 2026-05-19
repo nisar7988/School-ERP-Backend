@@ -53,6 +53,6 @@ async function bootstrap() {
   // main.ts
   app.useStaticAssets(join(__dirname, '..', 'uploads'));
   // ✅ Start the server --- IGNORE ---
-  await app.listen(process.env.PORT ?? 3000);
+  await app.listen(process.env.PORT ?? 3000, '0.0.0.0');
 }
 bootstrap();

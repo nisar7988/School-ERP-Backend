@@ -30,6 +30,7 @@
     "@nestjs/passport": "^11.0.5",
     "@nestjs/platform-express": "^11.1.19",
     "@nestjs/swagger": "^11.2.6",
+    "@openrouter/sdk": "^0.12.35",
     "@prisma/adapter-pg": "^7.5.0",
     "@prisma/client": "^7.7.0",
     "bcrypt": "^6.0.0",
@@ -96,6 +97,6 @@
     "testEnvironment": "node"
   },
   "engines": {
-  "node": "20.x"
-}
+    "node": "20.x"
+  }
 }

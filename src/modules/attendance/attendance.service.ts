@@ -2,6 +2,7 @@ import { Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../../prisma/prisma.service';
 import { UpdateAttendanceDto } from './dto/update-attendance.dto';
 import { CreateAttendanceDto } from './dto/create-attendance.dto';
+import { CreateBulkAttendanceDto } from './dto/create-bulk-attendance.dto';
 import { AttendanceQueryDto } from './dto/attendance-query.dto';
 import { createPaginatedResponse } from '../../common/utils/response.util';
 import { buildPagination } from '../../common/utils/pagination.util';
@@ -60,6 +61,28 @@ export class AttendanceService {
         status,
       },
     });
+  }
+
+  async createBulk(createBulkAttendanceDto: CreateBulkAttendanceDto) {
+    const { classId, date, records } = createBulkAttendanceDto;
+    const parsedDate = new Date(date);
+
+    return this.prisma.$transaction(
+      records.map((record) =>
+        this.prisma.attendance.upsert({
+          where: { studentId_date: { studentId: record.studentId, date: parsedDate } },
+          create: {
+            studentId: record.studentId,
+            classId,
+            date: parsedDate,
+            status: record.status,
+          },
+          update: {
+            status: record.status,
+          },
+        })
+      )
+    );
   }
 
   async update(id: string, updateAttendanceDto: UpdateAttendanceDto) {
