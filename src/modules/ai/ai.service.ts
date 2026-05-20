@@ -67,4 +67,53 @@ export class AiService {
       'I am currently experiencing high load. Please try again later.',
     );
   }
+
+  async *streamAI(prompt: string): AsyncGenerator<string, void, unknown> {
+    for (const model of this.models) {
+      let retries = 2;
+
+      while (retries > 0) {
+        try {
+          const response = await this.openrouter.chat.send({
+            chatRequest: {
+              model,
+              messages: [
+                {
+                  role: 'user',
+                  content: prompt,
+                },
+              ],
+              stream: true,
+            },
+          });
+
+          for await (const chunk of response) {
+            const content = chunk.choices?.[0]?.delta?.content;
+            if (content) {
+              console.log('content:', content);
+              yield content;
+            }
+          }
+          return; // successfully completed streaming
+        } catch (err: any) {
+          const statusCode = err?.status || err?.statusCode || err?.error?.code || err?.code;
+          this.logger.warn(`Model ${model} failed with status code: ${statusCode} in stream mode`);
+
+          // Retry same model if 429 (Rate Limited)
+          if (statusCode === 429 && retries > 1) {
+            await this.delay(1000 * Math.pow(2, 3 - retries));
+            retries--;
+            continue;
+          }
+
+          break; // move to next fallback model
+        }
+      }
+    }
+
+    this.logger.error('All AI fallback models failed in stream mode');
+    throw new InternalServerErrorException(
+      'I am currently experiencing high load. Please try again later.',
+    );
+  }
 }
