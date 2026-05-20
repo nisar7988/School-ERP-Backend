@@ -21,6 +21,8 @@ import { ClaudinaryModule } from './modules/claudinary/claudinary.module';
 import { ScheduleModule } from './modules/schedule/schedule.module';
 import { AiModule } from './modules/ai/ai.module';
 
+import { PdfModule } from './modules/pdf/pdf.module';
+
 @Module({
   imports: [
     ConfigModule.forRoot({ isGlobal: true }),
@@ -38,6 +40,7 @@ import { AiModule } from './modules/ai/ai.module';
     ClaudinaryModule,
     ScheduleModule,
     AiModule,
+    PdfModule,
   ],
   controllers: [AppController],
  providers: [

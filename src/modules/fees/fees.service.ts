@@ -137,9 +137,11 @@ export class FeesService {
       const amount = new Decimal(data.amount);
       const paidAmount = new Decimal(existing.paidAmount.toString());
       const pendingAmount = amount.minus(paidAmount);
-      
-      updatedData.pendingAmount = pendingAmount.greaterThanOrEqualTo(0) ? pendingAmount : new Decimal(0);
-      
+
+      updatedData.pendingAmount = pendingAmount.greaterThanOrEqualTo(0)
+        ? pendingAmount
+        : new Decimal(0);
+
       // Update status based on new amount
       if (paidAmount.equals(0)) {
         updatedData.status = 'PENDING';
@@ -344,6 +346,7 @@ export class FeesService {
     const student = await this.prisma.student.findUnique({
       where: { id: studentId },
       include: {
+        user: true,
         enrollments: {
           where: { endDate: null },
           include: {
@@ -376,9 +379,13 @@ export class FeesService {
       }),
     );
 
+    const activeEnrollment = student.enrollments[0];
+
     return {
       studentId,
-      studentName: student.id,
+      studentName: `${student.user?.firstName || ''} ${student.user?.lastName || ''}`.trim(),
+      rollNo: student.rollNo || '',
+      className: activeEnrollment?.class?.name || '',
       activeEnrollments: student.enrollments.length,
       totalStudentFees: student.fees.length,
       enrollmentDetails,

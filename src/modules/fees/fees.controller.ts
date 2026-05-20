@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Patch, Delete, Body, Param, Query } from '@nestjs/common';
+import { Controller, Get, Post, Patch, Delete, Body, Param, Query, Res } from '@nestjs/common';
 import { FeesService } from './fees.service';
 import { CreateFeeStructureDto } from './dto/create-fee-structure.dto';
 import { UpdateFeeStructureDto } from './dto/update-fee-structure.dto';
@@ -8,12 +8,17 @@ import { Roles } from '../../common/decorators/roles.decorator';
 import { Role } from '../../common/enums/roles.enum';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import { BaseQueryDto } from '../../common/dto/query.dto';
+import express from 'express';
+import { FeesPdfService } from '../pdf/pdf.service';
 
 @ApiTags('fees')
 @ApiBearerAuth('access-token')
 @Controller('fees')
 export class FeesController {
-  constructor(private readonly feesService: FeesService) {}
+  constructor(
+    private readonly feesService: FeesService,
+    private readonly feesPdfService: FeesPdfService,
+  ) {}
 
   @Post('structures')
   @Roles(Role.ADMIN)
@@ -53,7 +58,6 @@ export class FeesController {
   async getPendingFeesForClass(@Param('classId') classId: string) {
     return this.feesService.getPendingFeesForClass(classId);
   }
-
 
   @Post('student-fees')
   @Roles(Role.ADMIN)
@@ -107,5 +111,44 @@ export class FeesController {
     @Body() body: { dueDate: string },
   ) {
     return this.feesService.createStudentFeesForClassStudents(classId, body.dueDate);
+  }
+
+  @Get('student/:studentId/report')
+  @Roles(Role.ADMIN, Role.TEACHER, Role.STUDENT)
+  async generateFeeReport(@Param('studentId') studentId: string, @Res() res: express.Response) {
+    // Fetch student fees with related data
+    const fees = await this.feesService.getStudentFeesByStudent(studentId);
+
+    // Fetch student info via the enrollment status helper (has student + class info)
+    const enrollment = await this.feesService.getStudentEnrollmentStatus(studentId);
+
+    // Build totals
+    const totalFees = fees.reduce((sum, f) => sum + Number(f.amount), 0);
+    const totalPaid = fees.reduce((sum, f) => sum + Number(f.paidAmount), 0);
+    const totalPending = fees.reduce((sum, f) => sum + Number(f.pendingAmount), 0);
+
+    const pdfBuffer = await this.feesPdfService.generateFeePdf({
+      studentName: enrollment.studentName || 'N/A',
+      rollNo: enrollment.rollNo || 'N/A',
+      className: enrollment.className || 'N/A',
+      fees: fees.map((f) => ({
+        title: f.feeStructure?.title || 'Fee',
+        amount: Number(f.amount),
+        paidAmount: Number(f.paidAmount),
+        pendingAmount: Number(f.pendingAmount),
+        status: f.status,
+      })),
+      totalFees,
+      totalPaid,
+      totalPending,
+    });
+
+    res.set({
+      'Content-Type': 'application/pdf',
+      'Content-Disposition': `attachment; filename="fee_report_${studentId}.pdf"`,
+      'Content-Length': pdfBuffer.length,
+    });
+
+    res.end(pdfBuffer);
   }
 }
