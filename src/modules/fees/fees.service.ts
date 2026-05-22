@@ -11,7 +11,9 @@ import Decimal from 'decimal.js';
 @Injectable()
 export class FeesService {
   constructor(private readonly prisma: PrismaService) {}
-
+  async getAllFees() {
+    return this.prisma.studentFee.findMany();
+  }
   // admin add fee for class
   async createFeeForClass(data: CreateFeeStructureDto) {
     return this.prisma.$transaction(async (tx) => {

@@ -20,6 +20,11 @@ export class FeesController {
     private readonly feesPdfService: FeesPdfService,
   ) {}
 
+  @Get()
+  async getAllFees() {
+    return this.feesService.getAllFees();
+  }
+
   @Post('structures')
   @Roles(Role.ADMIN)
   async createFeeForClass(@Body() createFeeStructureDto: CreateFeeStructureDto) {
