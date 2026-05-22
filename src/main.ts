@@ -8,7 +8,7 @@ import { AppModule } from './app.module';
 import { ResponseInterceptor } from './common/interceptor/response.interceptor';
 import { HttpExceptionFilter } from './common/filters/http-exception/http-exception.filter';
 async function bootstrap() {
-  // ✅ Create NestJS application --- IGNORE ---
+  // Create NestJS application
   const app = await NestFactory.create<NestExpressApplication>(AppModule);
 
   //enable cors
@@ -16,7 +16,7 @@ async function bootstrap() {
     origin: true,
     credentials: true,
   });
-  // ✅ Global Validation Pipe --- IGNORE ---
+  // Global Validation Pipe
   app.useGlobalPipes(
     new ValidationPipe({
       whitelist: true,
@@ -24,7 +24,7 @@ async function bootstrap() {
     }),
   );
 
-  // ✅ Swagger setup --- IGNORE ---
+  // Swagger setup
   const config = new DocumentBuilder()
     .setTitle('ERP API')
     .setDescription('API documentation')
@@ -38,7 +38,7 @@ async function bootstrap() {
         description: 'Enter JWT token',
         in: 'header',
       },
-      'access-token', // 👈 name (important)
+      'access-token',
     )
     .build();
 
@@ -46,13 +46,13 @@ async function bootstrap() {
   SwaggerModule.setup('docs', app, documentFactory);
   app.setGlobalPrefix('api');
 
-  // ✅ Global Interceptors, Guards, and Filters --- IGNORE ---
+  // Global Interceptors, Guards, and Filters
   app.useGlobalInterceptors(new ResponseInterceptor());
   app.useGlobalFilters(new HttpExceptionFilter());
   app.useGlobalFilters(new PrismaExceptionFilter());
   // main.ts
   app.useStaticAssets(join(__dirname, '..', 'uploads'));
-  // ✅ Start the server --- IGNORE ---
+  // Start the server
   await app.listen(process.env.PORT ?? 3000, '0.0.0.0');
 }
 bootstrap();

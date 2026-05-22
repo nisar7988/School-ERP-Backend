@@ -41,4 +41,8 @@ export class CreateTeacherDto {
   @IsNotEmpty()
   @IsEnum(Gender)
   gender!: Gender;
+
+  @IsOptional()
+  @ApiProperty({ type: 'string', format: 'binary', required: false })
+  profileImage?: any;
 }

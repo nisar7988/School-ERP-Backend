@@ -6,10 +6,15 @@ import toStream from 'buffer-to-stream';
 export class CloudinaryService {
   async uploadFile(file: Express.Multer.File): Promise<UploadApiResponse | UploadApiErrorResponse> {
     return new Promise((resolve, reject) => {
-      const upload = cloudinary.uploader.upload_stream((error, result) => {
-        if (error) return reject(error);
-        resolve(result!);
-      });
+      const upload = cloudinary.uploader.upload_stream(
+        {
+          folder: 'erp/student/profile',
+        },
+        (error, result) => {
+          if (error) return reject(error);
+          resolve(result!);
+        },
+      );
       toStream(file.buffer).pipe(upload);
     });
   }

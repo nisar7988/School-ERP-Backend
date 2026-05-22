@@ -1,21 +1,34 @@
 import { TeacherService } from './teacher.service';
 import { CreateTeacherDto } from './dto/create-teacher.dto';
-import { Controller, Post, Patch, Get, Delete, Body, Param, Query, Req } from '@nestjs/common';
+import {
+  Controller,
+  Post,
+  Patch,
+  Get,
+  Delete,
+  Body,
+  Param,
+  Query,
+  Req,
+  UseInterceptors,
+  UploadedFile,
+  BadRequestException,
+} from '@nestjs/common';
 import { BaseQueryDto } from '../../common/dto/query.dto';
-import { ApiBearerAuth } from '@nestjs/swagger';
+import { ApiBearerAuth, ApiConsumes } from '@nestjs/swagger';
 import { ClassService } from '../class/class.service';
-import { RolesGuard } from '../../common/guards/roles.guard';
 import { Role } from '../../common/enums/roles.enum';
-import { UserRole } from '@prisma/client';
 import { Roles } from '../../common/decorators/roles.decorator';
-
-
+import { FileInterceptor } from '@nestjs/platform-express';
+import { CloudinaryService } from '../claudinary/claudinary.service';
+import { imageUploadConfig } from '../../common/config/multer-image.config';
 @ApiBearerAuth('access-token')
 @Controller('teachers')
 export class TeacherController {
   constructor(
     private readonly teacherService: TeacherService,
     private readonly classService: ClassService,
+    private readonly cloudinaryService: CloudinaryService,
   ) {}
 
   @Get()
@@ -34,7 +47,16 @@ export class TeacherController {
   }
 
   @Post()
-  addTeacher(@Body() teacherData: CreateTeacherDto) {
+  @ApiConsumes('multipart/form-data')
+  @UseInterceptors(FileInterceptor('profileImage', imageUploadConfig))
+  async addTeacher(
+    @Body() teacherData: CreateTeacherDto,
+    @UploadedFile() file?: Express.Multer.File,
+  ) {
+    if (file) {
+      const upload = await this.cloudinaryService.uploadFile(file);
+      teacherData.profileImage = upload.secure_url;
+    }
     return this.teacherService.addTeacher(teacherData);
   }
 
@@ -47,6 +69,4 @@ export class TeacherController {
   removeTeacher(@Param('id') id: string) {
     return this.teacherService.removeTeacher(id);
   }
-
-
 }

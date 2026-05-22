@@ -34,12 +34,13 @@ export class UsersService {
     }
 
     const encryptedPassword = await bcrypt.hash(userData.password, 10);
+    const profileImage = typeof userData.profileImage === 'string' ? userData.profileImage : undefined;
 
     return this.prisma.user.create({
       data: {
         ...userData,
         password: encryptedPassword,
-        profileImage: userData.profileImage,
+        profileImage,
       },
     });
   }

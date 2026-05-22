@@ -1,4 +1,15 @@
-import { Controller, Post, Patch, Get, Delete, Body, Param } from '@nestjs/common';
+import {
+  Controller,
+  Post,
+  Patch,
+  Get,
+  Delete,
+  Body,
+  Param,
+  UseInterceptors,
+  UploadedFile,
+  BadRequestException,
+} from '@nestjs/common';
 import { StudentService } from './student.service';
 import { CreateStudentDto } from './dto/create-student.dto';
 import { UpdateStudentDto } from './dto/update-student.dto';
@@ -6,12 +17,18 @@ import { Query } from '@nestjs/common/decorators';
 import { BaseQueryDto } from '../../common/dto/query.dto';
 import { Roles } from '../../common/decorators/roles.decorator';
 import { Role } from '../../common/enums/roles.enum';
-import { ApiBearerAuth } from '@nestjs/swagger';
+import { ApiBearerAuth, ApiConsumes } from '@nestjs/swagger';
+import { FileInterceptor } from '@nestjs/platform-express';
+import { CloudinaryService } from '../claudinary/claudinary.service';
+import { imageUploadConfig } from '../../common/config/multer-image.config';
 
 @ApiBearerAuth('access-token')
 @Controller('students')
 export class StudentController {
-  constructor(private readonly studentService: StudentService) {}
+  constructor(
+    private readonly studentService: StudentService,
+    private readonly cloudinaryService: CloudinaryService,
+  ) {}
 
   @Get()
   @Roles(Role.ADMIN, Role.TEACHER)
@@ -27,13 +44,33 @@ export class StudentController {
 
   @Post()
   @Roles(Role.ADMIN, Role.TEACHER)
-  async addStudent(@Body() studentData: CreateStudentDto) {
+  @ApiConsumes('multipart/form-data')
+  @UseInterceptors(FileInterceptor('profileImage', imageUploadConfig))
+  async addStudent(
+    @Body() studentData: CreateStudentDto,
+    @UploadedFile() file?: Express.Multer.File,
+  ) {
+    if (file) {
+      const upload = await this.cloudinaryService.uploadFile(file);
+      studentData.profileImage = upload.secure_url;
+    }
+    console.log('studentData', studentData);
     return this.studentService.addStudent(studentData);
   }
 
   @Patch(':id')
   @Roles(Role.ADMIN, Role.TEACHER)
-  async updateStudent(@Param('id') id: string, @Body() updateData: UpdateStudentDto) {
+  @ApiConsumes('multipart/form-data')
+  @UseInterceptors(FileInterceptor('profileImage', imageUploadConfig))
+  async updateStudent(
+    @Param('id') id: string,
+    @Body() updateData: UpdateStudentDto,
+    @UploadedFile() file?: Express.Multer.File,
+  ) {
+    if (file) {
+      const upload = await this.cloudinaryService.uploadFile(file);
+      updateData.profileImage = upload.secure_url;
+    }
     return this.studentService.updateStudent(id, updateData);
   }
 

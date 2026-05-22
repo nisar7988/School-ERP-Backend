@@ -20,7 +20,6 @@ export class AuthService {
     };
   }> {
     const user = await this.usersService.findByEmail(loginDto.email);
-    console.log('user', user);
     if (!user) {
       throw new UnauthorizedException('Invalid credentials');
     }

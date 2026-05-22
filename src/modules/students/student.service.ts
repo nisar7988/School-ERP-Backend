@@ -7,6 +7,7 @@ import { buildPagination } from '../../common/utils/pagination.util';
 import { createPaginatedResponse } from '../../common/utils/response.util';
 import * as bcrypt from 'bcrypt';
 import { FeesService } from '../fees/fees.service';
+import { async } from 'rxjs';
 @Injectable()
 export class StudentService {
   constructor(
@@ -24,9 +25,11 @@ export class StudentService {
       gender,
       password,
       classId, // ✅ important
+      profileImage,
       ...rest
     } = dto;
 
+    const sanitizedProfileImage = typeof profileImage === 'string' ? profileImage : undefined;
     const rawPassword = password;
     const hashedPassword = await bcrypt.hash(password, 10);
 
@@ -50,6 +53,7 @@ export class StudentService {
               phone,
               password: hashedPassword,
               role: 'STUDENT',
+              profileImage: sanitizedProfileImage,
             },
           },
 
@@ -88,13 +92,12 @@ export class StudentService {
     }
   }
 
-
   async getAllStudents(query: BaseQueryDto) {
     const { classId, page = 1, limit = 10, search } = query;
     const { skip, take } = buildPagination(page, limit);
 
     const where: any = {};
-    
+
     if (classId) {
       where.enrollments = {
         some: {
@@ -162,19 +165,26 @@ export class StudentService {
       fatherName,
       motherName,
       emergencyContact,
+      profileImage,
     } = updateData;
-
-    return this.prisma.student.update({
+    return await this.prisma.student.update({
       where: { id },
       data: {
-        ...(admissionNo && { admissionNo }),
-        ...(rollNo && { rollNo }),
+        ...(admissionNo !== undefined && { admissionNo }),
+        ...(rollNo !== undefined && { rollNo }),
         ...(dateOfBirth && { dateOfBirth: new Date(dateOfBirth) }),
-        ...(address && { address }),
-        ...(gender && { gender }),
-        ...(fatherName && { fatherName }),
-        ...(motherName && { motherName }),
-        ...(emergencyContact && { emergencyContact }),
+        ...(address !== undefined && { address }),
+        ...(gender !== undefined && { gender }),
+        ...(fatherName !== undefined && { fatherName }),
+        ...(motherName !== undefined && { motherName }),
+        ...(emergencyContact !== undefined && { emergencyContact }),
+        ...(profileImage && {
+          user: {
+            update: {
+              profileImage,
+            },
+          },
+        }),
       },
       include: {
         user: true,

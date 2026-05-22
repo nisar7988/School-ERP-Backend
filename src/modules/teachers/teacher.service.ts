@@ -11,6 +11,7 @@ export class TeacherService {
   constructor(private readonly prisma: PrismaService) {}
 
   async addTeacher(data: CreateTeacherDto) {
+    const profileImage = typeof data.profileImage === 'string' ? data.profileImage : undefined;
     return this.prisma.$transaction(async (tx) => {
       const hashedPassword = await bcrypt.hash(data.password, 10);
       const user = await tx.user.create({
@@ -21,6 +22,7 @@ export class TeacherService {
           firstName: data.firstName,
           lastName: data.lastName,
           phone: data.phone,
+          profileImage,
         },
       });
 

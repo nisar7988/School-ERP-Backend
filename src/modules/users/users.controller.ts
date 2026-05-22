@@ -22,21 +22,30 @@ export class UsersController {
   @UseInterceptors(
     FileInterceptor('profileImage', {
       fileFilter: (req, file, cb) => {
+        console.log('file', file);
         if (!file.mimetype.match(/\/(jpg|jpeg|png)$/)) {
           return cb(new BadRequestException('Only image files allowed'), false);
         }
         cb(null, true);
       },
       limits: {
-        fileSize: 2 * 1024 * 1024, // 2MB
+        fileSize: 10 * 1024 * 1024, // 2MB
       },
     }),
   )
   async create(@Body() createUserDto: CreateUserDto, @UploadedFile() file?: Express.Multer.File) {
+    if (createUserDto.role && createUserDto.role !== 'ADMIN') {
+      throw new BadRequestException(
+        'Standard users (STUDENT/TEACHER) must be created through their respective /students or /teachers endpoints.',
+      );
+    }
+    createUserDto.role = 'ADMIN';
+
     if (file) {
       const upload = await this.cloudinaryService.uploadFile(file);
       createUserDto.profileImage = upload.secure_url;
     }
+    console.log('createuserdot', createUserDto);
     return this.usersService.createUser(createUserDto);
   }
 
@@ -54,7 +63,7 @@ export class UsersController {
   }
 
   @Patch('me/profile-image')
-  @Roles(Role.ADMIN, Role.TEACHER)
+  @Roles(Role.ADMIN, Role.TEACHER, Role.STUDENT)
   @ApiConsumes('multipart/form-data')
   @UseInterceptors(
     FileInterceptor('profileImage', {

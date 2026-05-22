@@ -76,4 +76,8 @@ export class CreateStudentDto {
   @IsOptional()
   @IsString()
   password?: string;
+
+  @IsOptional()
+  @ApiProperty({ type: 'string', format: 'binary', required: false })
+  profileImage?: any;
 }
