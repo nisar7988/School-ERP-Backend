@@ -15,4 +15,8 @@ export class AttendanceQueryDto extends BaseQueryDto {
   @IsString()
   month ?: string;
 
+  @ApiPropertyOptional({ example: '2024-01-01' })
+  @IsOptional()
+  @IsString()
+  date?: string;
 }

@@ -11,7 +11,7 @@ export class AttendanceService {
   constructor(private readonly prisma: PrismaService) {}
 
   async findAll(query: AttendanceQueryDto) {
-    const { status, page = 1, limit = 10, sortBy = 'createdAt', order = 'desc', search } = query;
+    const { status, page = 1, limit = 10, sortBy = 'createdAt', order = 'desc', search, classId, date } = query;
 
     const pagination = buildPagination(page, limit);
 
@@ -19,6 +19,14 @@ export class AttendanceService {
 
     if (status) {
       where.status = status;
+    }
+
+    if (classId) {
+      where.classId = classId;
+    }
+
+    if (date) {
+      where.date = new Date(date);
     }
 
     if (search) {
